@@ -2,7 +2,7 @@ const express =require("express");
 const router=express.Router();
 const adminController=require('../Controllers/adminController')
 const multer=require('../multer/multer')
-
+const auth=require('../middleware/auth.js')
 
 router.get('/',adminController.getLogin)
 
@@ -21,20 +21,27 @@ router.get('/editproduct/:id',adminController.getEditproduct)
 
 // router.post('/editproduct/:id', multer.editeduploads, adminController.postEditproduct);
 
-router.get('/productlist',adminController.getProductList)
 
-router.delete('/deleteproduct/:id',adminController.deleteProduct)
+router.get('/productlist',auth.adminAuth,adminController.getProductList)
+
+router.delete('/deleteproduct/:id',auth.adminAuth,adminController.deleteProduct)
 
 
-router.get('/addcategory',adminController.getAddcategory)
+router.get('/addcategory',auth.adminAuth,adminController.getAddcategory)
 
-router.post('/addcategory',adminController.postAddcategory)
+router.post('/addcategory',auth.adminAuth,adminController.postAddcategory)
 
-router.get('/edit-category/:id', adminController.getEditcategory)
+router.get('/edit-category/:id',auth.adminAuth, adminController.getEditcategory)
 
-// router.patch('/edit-category/:id', adminController.postEditcategory)
+router.patch('/edit-category/:id',auth.adminAuth, adminController.postEditcategory);
 
-router.delete('/delete-category/:id',adminController.deleteCategory)
+
+router.delete('/delete-category/:id',auth.adminAuth,adminController.deleteCategory)
+
+router.get('/order-list/:id',auth.adminAuth,adminController.getOrderList)
+
+router.route('/order-details').get(auth.adminAuth, adminController.getOrderDetails);
+
 
 
 

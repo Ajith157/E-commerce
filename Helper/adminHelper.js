@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 
-const { AdminModel, ProductModel, CategoryModel } = require('../models/Schema');
+const { AdminModel, ProductModel, CategoryModel,UserModel } = require('../models/Schema');
 const { Promise } = require('mongoose');
 const { response } = require('express');
 
@@ -31,20 +31,17 @@ const doLogin = async (data) => {
 };
 
 
-const getUser = async (req, res) => {
+const getUser = async (req, res, userId) => {
     try {
-        return new Promise(async (resolve, reject) => {
-            let userData = [];
-            await db.UserModel.find().exec().then((result) => {
-                userData = result;
-            });
-            resolve(userData);
-
-        });
+        const userData = await UserModel.findOne({ userId }).exec();
+        return userData;
+      
     } catch (error) {
         console.log(error.message);
     }
 };
+
+
 
 const postAddproduct = async (data) => {
     try {
@@ -57,43 +54,43 @@ const postAddproduct = async (data) => {
     }
 };
 
-const geteditproduct = (proId) => {
-    return new Promise((resolve, reject) => {
-        try {
-            ProductModel.findById(proId).then((product) => {
-                if (product) {
-                    resolve(product);
-                } else {
-                    console.log('Product not found');
-                }
-            });
-        } catch (error) {
-            throw error;
+const geteditproduct = async (proId) => {
+    try {
+      
+        const product = await ProductModel.findById(proId);
+      
+        if (product) {
+            return product;
+        } else {
+            console.log('Product not found');
+            return null; 
         }
-    });
+    } catch (error) {
+        console.error(error);
+        throw new Error('Error retrieving the product');
+    }
 };
 
-// const getPreviousImage = (proId) => {
-//     console.log(proId,'5555555555555');
-//     return new Promise((resolve, reject) => {
-//         ProductModel.findOne({ _id: proId })
-//             .then((response) => {
-//                 console.log(response,'rrrrrrrrrrrr');
-//                 if (response) {
-//                     resolve(response.img);
-//                 } else {
-//                     reject(new Error('Product not found'));
-//                 }
-//             })
-//             .catch((error) => {
-//                 reject(error);
-//             });
-//     });
+
+// const getPreviousImage = async (proId) => {
+//     console.log(proId, '5555555555555');
+//     try {
+//         const response = await ProductModel.findOne({ _id: proId });
+//         console.log(response, 'rrrrrrrrrrrr');
+//         if (response) {
+//             return response.img;
+//         } else {
+//             throw new Error('Product not found');
+//         }
+//     } catch (error) {
+//         throw error;
+//     }
 // };
 
-// const postEditproduct = (proId, product, image) => {
-//     return new Promise((resolve, reject) => {
-//         ProductModel.updateOne(
+
+// const postEditproduct = async (proId, product, image) => {
+//     try {
+//         const response = await ProductModel.updateOne(
 //             { _id: proId },
 //             {
 //                 $set: {
@@ -101,22 +98,24 @@ const geteditproduct = (proId) => {
 //                     description: product.description,
 //                     price: product.price,
 //                     category: product.category,
+//                     inventoryId: product.inventoryId,
 //                     img: image
 //                 }
 //             }
-//         )
-//         .then((response) => {
-//             if (response) {
-//                 resolve(response);
-//             } else {
-//                 reject(new Error('Product update failed'));
-//             }
-//         })
-//         .catch((error) => {
-//             reject(error);
-//         });
-//     });
+//         );
+
+//         if (response.nModified > 0) {
+//             return response;
+//         } else {
+//             throw new Error('Product update failed');
+//         }
+//     } catch (error) {
+//         throw error;
+//     }
 // };
+
+
+
 
 const deleteProduct = async (proId) => {
     try {
@@ -163,27 +162,26 @@ const getEditcategory=async(categoryId)=>{
 
 };
 
-// const postEditcategory = (data) => {
-//     return new Promise((resolve, reject) => {
-//         try {
-//             ProductModel.findByIdAndUpdate(
-//                 data._id,
-//                 { category: data.category },
-//                 { new: true }
-//             ).then((updatedProduct) => {
-//                 if (updatedProduct) {
-//                     resolve(updatedProduct);
-//                 } else {
-//                     reject(new Error("Product not found"));
-//                 }
-//             }).catch((err) => {
-//                 reject(err);
-//             });
-//         } catch (error) {
-//             reject(error);
-//         }
-//     });
-// };
+const postEditCategory = async (id, name, description) => {
+    try {
+        const updatedCategory = await CategoryModel.findByIdAndUpdate(
+            id,
+            { name: name, description: description },
+            { new: true }
+        );
+
+        if (updatedCategory) {
+            return updatedCategory;
+        } else {
+            throw new Error("Category not found");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 
 const deleteCategory = async (catId) => {
     try {
@@ -202,4 +200,12 @@ const deleteCategory = async (catId) => {
 
 
 
-module.exports = { doLogin, getUser,postAddproduct,geteditproduct,deleteProduct,getAddCategory,deleteCategory };
+module.exports = { doLogin,
+     getUser,
+     postAddproduct,
+     geteditproduct,
+     postEditCategory, 
+     getEditcategory,
+     deleteProduct,
+     getAddCategory,
+     deleteCategory };

@@ -67,6 +67,94 @@ const categorySchema = new mongoose.Schema({
     modifiedAt: { type: Date, default: Date.now }
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' } });
 
+const cartSchema=new mongoose.Schema({
+    user:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"user"
+    },
+    cartItems:[
+        {
+            productId: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
+            quantity: { type: Number, default: 1 },
+            price: { type: Number },
+        },
+    ]
+
+});
+
+const addressSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    },
+  
+    Address: [
+        {
+            fname: { type: String },
+            lname: { type: String },
+            street: { type: String },
+            appartment: { type: String },
+            city: { type: String },
+            state: { type: String },
+            zipcode: { type: String },
+            phone: { type: String },
+            email: { type: String }
+        }
+    ]
+  
+  })
+  const orderSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    },
+  
+    orders: [
+        {
+            fname: { type: String },
+            lname: { type: String },
+            phone: { type: Number },
+            paymentMethod: { type: String },
+            paymentStatus: { type: String },
+            totalPrice: { type: Number },
+            totalQuantity: { type: Number },
+            productDetails: { type: Array },
+            shippingAddress: { type: Object },
+            paymentMethod: String,
+            status: {
+                type: Boolean,
+                default: true
+            },
+            paymentType: String,
+            createdAt: {
+                type: Date,
+                default: new Date()
+            },
+            orderConfirm: { type: String, default: "ordered" }
+        }
+    ]
+  })
+
+  const wishListSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user'
+    },
+    wishList: [
+        {
+            productId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ]
+})
 
 
 
@@ -74,5 +162,9 @@ const UserModel = mongoose.model('User', UserSchema);
 const AdminModel = mongoose.model('admin', adminSchema);
 const ProductModel=mongoose.model('product',productSchema);
 const CategoryModel=mongoose.model('category',categorySchema)
+const cartModel=mongoose.model('cart',cartSchema);
+const addressModel=mongoose.model('address',addressSchema);
+const orderModel=mongoose.model('order',orderSchema);
+const wishlistModel=mongoose.model('wishlist',wishListSchema)
 
-module.exports = { UserModel, AdminModel,ProductModel,CategoryModel };
+module.exports = { UserModel, AdminModel,ProductModel,CategoryModel,cartModel,addressModel,orderModel,wishlistModel };

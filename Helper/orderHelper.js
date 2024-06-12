@@ -3,6 +3,7 @@ const { ObjectId } = require('mongodb')
 const {cartModel,addressModel,orderModel,ProductModel,UserModel} = require('../models/Schema')
 const mongoose = require('mongoose'); 
 
+//Calculates the total checkout amount for a user's cart.
 
 const totalCheckOutAmount= (userId) => {
     return new Promise((resolve, reject) => {
@@ -47,6 +48,8 @@ const totalCheckOutAmount= (userId) => {
       });
     });
   };
+
+  //Calculates the subtotal for the items in the user's cart.
 
   const getSubTotal= (userId) => {
     return new Promise((resolve, reject) => {
@@ -94,6 +97,8 @@ const totalCheckOutAmount= (userId) => {
     });
   };
 
+  // Saves or updates the user's address information.
+
   const postAddress= (data, userId) => {
     return new Promise((resolve, reject) => {
         try {
@@ -137,9 +142,10 @@ const totalCheckOutAmount= (userId) => {
     });
 };
 
+//Retrieves the details of the specified address for a user.
+
 const getEditAddress = (addressId, userId) => {
-  console.log(addressId,'aaaaa');
-  console.log(userId,'sssssssss');
+
   return new Promise((resolve, reject) => {
       addressModel.aggregate([
           {
@@ -160,11 +166,11 @@ const getEditAddress = (addressId, userId) => {
           }
       ])
       .then(result => {
-        console.log(result,'rrrr');
+        
           if (result.length === 0) {
-              resolve(null); // Address not found
+              resolve(null); 
           } else {
-              resolve(result[0].address[0]); // Return the matched address
+              resolve(result[0].address[0]); 
           }
       })
       .catch(error => {
@@ -172,6 +178,8 @@ const getEditAddress = (addressId, userId) => {
       });
   });
 };
+
+//Updates the specified address for a user.
 
 const patchEditAddress = (userId, addressId, userData) => {
   return new Promise(async (resolve, reject) => {
@@ -194,6 +202,8 @@ const patchEditAddress = (userId, addressId, userData) => {
   });
 };
 
+// Deletes the specified address for a user.
+
 const deleteAddress = (userId, addressId) => {
   return new Promise((resolve, reject) => {
       addressModel.updateOne(
@@ -209,6 +219,8 @@ const deleteAddress = (userId, addressId) => {
   });
 };
 
+//Retrieves the address of the specified user.
+
 const getAddress= (userId) => {
 
   return new Promise((resolve, reject) => {
@@ -219,8 +231,10 @@ const getAddress= (userId) => {
   })
 };
 
-const placeOrder= (data) => {
-  console.log(data,'dddd');
+// Places an order for the specified user.
+
+const  placeOrder= (data) => {
+
   return new Promise(async (resolve, reject) => {
       try {
           const productDetails = await cartModel.aggregate([
@@ -327,6 +341,7 @@ const placeOrder= (data) => {
   });
 };
 
+//Retrieves the count of items in the user's cart.
 
 const getCartCount = (userId) => {
   return new Promise((resolve, reject) => {
@@ -342,6 +357,7 @@ const getCartCount = (userId) => {
   });
 };
 
+//Retrieves the orders for a given user.
 
 
 const getOrders = (userId) => {
@@ -349,10 +365,10 @@ const getOrders = (userId) => {
     try {
       orderModel.findOne({ user: new ObjectId(userId) }).then((user) => {
         if (!user) {
-          resolve({ success: true, user: null, orders: [] }); // User found but no orders
+          resolve({ success: true, user: null, orders: [] });
           return;
         }
-        resolve({ success: true, user, orders: user.orders }); // Assuming user.orders contains the orders
+        resolve({ success: true, user, orders: user.orders }); 
       }).catch((error) => {
         reject({ error: "Database error", details: error.message });
       });
@@ -362,6 +378,7 @@ const getOrders = (userId) => {
   });
 };
 
+//Retrieves the shipping address for a specific order of a user.
 
 const getOrderAddress= (userId, orderId) => {
   return new Promise((resolve, reject) => {
@@ -395,7 +412,7 @@ const getOrderAddress= (userId, orderId) => {
 }
 
 
-
+//Retrieves sub-orders for a specific order of a user.
 
 
 const getSubOrders = (orderId, userId) => {
@@ -427,6 +444,8 @@ const getSubOrders = (orderId, userId) => {
     }
   });
 };
+
+//Retrieves ordered products for a specific order of a user.
 
 const getOrderedProducts= (orderId, userId) => {
   return new Promise((resolve, reject) => {
@@ -463,6 +482,8 @@ const getOrderedProducts= (orderId, userId) => {
       }
   });
 };
+
+//Retrieves the total price of products in a specific order of a user.
 
 const getTotal= (orderId, userId) => {
   return new Promise((resolve, reject) => {
@@ -502,6 +523,8 @@ const getTotal= (orderId, userId) => {
       }
   });
 };
+
+//Retrieves the total price of products in a specific order of a user.
 
 const getOrderTotal = (orderId, userId) => {
   return new Promise((resolve, reject) => {

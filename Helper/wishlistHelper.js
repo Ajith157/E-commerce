@@ -2,23 +2,22 @@ const {wishlistModel} = require('../models/Schema')
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
 
-
+//Adds a product to the user's wishlist.
 
 const addWishList = async (userId, proId) => {
     try {
         const userWishList = await wishlistModel.findOne({ user: new ObjectId(userId) });
 
-      
-        
+    
+
         if (userWishList) {
-           
-            const productExist = userWishList.find(wishListItem => wishListItem.productId.equals(new ObjectId(proId)));
+         
+            const productExist = userWishList.wishList.find(wishListItem => wishListItem.productId.equals(new ObjectId(proId)));
 
             if (productExist) {
                
                 return { status: false, message: "Product already exists in wishlist" };
             } else {
-                
                 await wishlistModel.updateOne(
                     { user: new ObjectId(userId) },
                     { $push: { wishList: { productId: new ObjectId(proId) } } }
@@ -26,7 +25,6 @@ const addWishList = async (userId, proId) => {
                 return { status: true, message: "Product added to wishlist successfully" };
             }
         } else {
-           
             const wishListData = {
                 user: new ObjectId(userId),
                 wishList: [{ productId: new ObjectId(proId) }]
@@ -36,9 +34,12 @@ const addWishList = async (userId, proId) => {
             return { status: true, message: "Product added to wishlist successfully" };
         }
     } catch (error) {
-        return { error: error.message };
+        console.error("Error in addWishList helper:", error); 
+        return { status: false, message: error.message };
     }
 };
+
+//Get the count of products in the user's wishlist.
 
 const getWishlistcount = (userId) => {
     return new Promise((resolve, reject) => {
@@ -55,6 +56,8 @@ const getWishlistcount = (userId) => {
             });
     });
 };
+
+//Get the products in the user's wishlist.
 
 const getWishlistProducts = (userId) => {
     return new Promise((resolve, reject) => {
@@ -97,6 +100,8 @@ const getWishlistProducts = (userId) => {
         });
     });
 };
+
+//Remove a product from the wishlist.
 
 const removeProductWishlist = (proId, wishListId) => {
     return new Promise((resolve, reject) => {

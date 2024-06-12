@@ -3,7 +3,7 @@ const cartHelper = require('../Helper/cartHelper');
 const orderHelper=require('../Helper/orderHelper');
 
 
-
+//Handles the POST request to add an item to the cart.
 
 const addToCart = (req, res) => {
   try {
@@ -17,7 +17,7 @@ const addToCart = (req, res) => {
   }
 };
 
-
+//Handles the GET request to retrieve cart data.
 
 const getCart=async (req, res) => {
 
@@ -45,6 +45,8 @@ const getCart=async (req, res) => {
 
 };
 
+//Handles the POST request to update item quantity in the cart
+
 const updateQuantity= (req, res) => {
 
   let userId = req.session.user._id;
@@ -55,13 +57,15 @@ const updateQuantity= (req, res) => {
   })
 };
 
+// Handles the POST request to delete a product from the cart.
+
 const deleteProduct= (req, res) => {
   cartHelper.deleteProduct(req.body)
     .then((response) => {
-      res.json(response); // Sending response as JSON
+      res.json(response); 
     })
     .catch((error) => {
-      res.status(500).json({ error: error.message }); // Sending error response as JSON
+      res.status(500).json({ error: error.message }); 
     });
 }
 

@@ -4,6 +4,7 @@ const { AdminModel, ProductModel, CategoryModel,UserModel } = require('../models
 const { Promise } = require('mongoose');
 const { response } = require('express');
 
+//Performs login for admin users.
 
 const doLogin = async (data) => {
     try {
@@ -30,18 +31,22 @@ const doLogin = async (data) => {
     }
 };
 
+// Retrieves all users from the database.
 
-const getUser = async (req, res, userId) => {
+
+const getAllUsers = async () => {
     try {
-        const userData = await UserModel.findOne({ userId }).exec();
-        return userData;
+        const usersData = await UserModel.find({}).exec();
+      
+        return usersData;
       
     } catch (error) {
         console.log(error.message);
+        throw new Error('Error fetching users');
     }
 };
 
-
+//Adds a new product to the database.
 
 const postAddproduct = async (data) => {
     try {
@@ -53,6 +58,8 @@ const postAddproduct = async (data) => {
         throw new Error('Error saving the product');
     }
 };
+
+//Retrieves product details for editing.
 
 const geteditproduct = async (proId) => {
     try {
@@ -71,50 +78,50 @@ const geteditproduct = async (proId) => {
     }
 };
 
+//Retrieves previous images of a product.
 
-// const getPreviousImage = async (proId) => {
-//     console.log(proId, '5555555555555');
-//     try {
-//         const response = await ProductModel.findOne({ _id: proId });
-//         console.log(response, 'rrrrrrrrrrrr');
-//         if (response) {
-//             return response.img;
-//         } else {
-//             throw new Error('Product not found');
-//         }
-//     } catch (error) {
-//         throw error;
-//     }
-// };
+const getPreviousImage = async (proId) => {
+    try {
+      const response = await ProductModel.findOne({ _id: proId });
+      return response.img;
+    } catch (error) {
+      console.log(error.message);
+      throw error;
+    }
+};
+  
+//Updates product details.
+
+const updateProduct = async (proId, product, image) => {
+
+ 
+    try {
+        const response = await ProductModel.updateOne(
+            { _id: proId },
+            {
+                $set: {
+                    name: product.name,
+                    description: product.description,
+                    price: product.price,
+                    category: product.category,
+                    inventoryId: product.inventoryId,
+                    img: image
+                }
+            }
+        );
+          
+        if (response) {
+            return response;
+        } else {
+            throw new Error('Product update failed');
+        }
+    } catch (error) {
+        throw error;
+    }
+};
 
 
-// const postEditproduct = async (proId, product, image) => {
-//     try {
-//         const response = await ProductModel.updateOne(
-//             { _id: proId },
-//             {
-//                 $set: {
-//                     name: product.name,
-//                     description: product.description,
-//                     price: product.price,
-//                     category: product.category,
-//                     inventoryId: product.inventoryId,
-//                     img: image
-//                 }
-//             }
-//         );
-
-//         if (response.nModified > 0) {
-//             return response;
-//         } else {
-//             throw new Error('Product update failed');
-//         }
-//     } catch (error) {
-//         throw error;
-//     }
-// };
-
-
+//Deletes a product.
 
 
 const deleteProduct = async (proId) => {
@@ -130,6 +137,8 @@ const deleteProduct = async (proId) => {
         throw error;
     }
 };
+
+// Adds a new category.
 
 const getAddCategory = async (data) => {
     try {
@@ -151,6 +160,8 @@ const getAddCategory = async (data) => {
     }
 };
 
+//Fetches category details for editing.
+
 const getEditcategory=async(categoryId)=>{
 
     try {
@@ -161,6 +172,8 @@ const getEditcategory=async(categoryId)=>{
     }
 
 };
+
+// Updates category details.
 
 const postEditCategory = async (id, name, description) => {
     try {
@@ -181,7 +194,7 @@ const postEditCategory = async (id, name, description) => {
 };
 
 
-
+//Deletes a category by its ID.
 
 const deleteCategory = async (catId) => {
     try {
@@ -201,11 +214,14 @@ const deleteCategory = async (catId) => {
 
 
 module.exports = { doLogin,
-     getUser,
+    getAllUsers,
      postAddproduct,
      geteditproduct,
      postEditCategory, 
      getEditcategory,
      deleteProduct,
+     getPreviousImage,
      getAddCategory,
-     deleteCategory };
+     deleteCategory,
+    
+     updateProduct };

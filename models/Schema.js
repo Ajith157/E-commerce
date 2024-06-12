@@ -12,149 +12,77 @@ const UserSchema = new Schema({
     resetPasswordExpires: { type: Date },
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' } });
 
-const adminSchema = new mongoose.Schema({
-    email: {
-        type: String
-    },
-    password: {
-        type: String
-    }
-});
-const productSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    description: {
-        type: String,
-        required: true,
-    },
-    price: {
-        type: Number,
-        required: true,
-    },
-    category:{
-        type:String,required:true,
-    },
-    inventoryId: {
-        type:String,required:true,
-      
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    modifiedAt: {
-        type: Date,
-        default: Date.now,
-    },
-    deletedAt: {
-        type: Date,
-        default: null,
-    },
-    img:{
-        type:Array,required:true,
-    },
-}, {
-    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' }
-});
+const adminSchema = new Schema({
+    email: { type: String },
+    password: { type: String }
+}, { timestamps: true });
 
-const categorySchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
+const productSchema = new Schema({
+    name: { type: String, required: true },
     description: { type: String, required: true },
+    price: { type: Number, required: true },
+    category: { type: String, required: true },
+    inventoryId: { type: String, required: true },
     deletedAt: { type: Date, default: null },
-    createdAt: { type: Date, default: Date.now },
-    modifiedAt: { type: Date, default: Date.now }
+    img: { type: Array, required: true },
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' } });
 
-const cartSchema=new mongoose.Schema({
-    user:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"user"
-    },
-    cartItems:[
-        {
-            productId: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
-            quantity: { type: Number, default: 1 },
-            price: { type: Number },
-        },
-    ]
+const categorySchema = new Schema({
+    name: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    deletedAt: { type: Date, default: null }
+}, { timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' } });
 
-});
+const cartSchema = new Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+    cartItems: [{
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
+        quantity: { type: Number, default: 1 },
+        price: { type: Number }
+    }]
+}, { timestamps: true });
 
-const addressSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
-    },
-  
-    Address: [
-        {
-            fname: { type: String },
-            lname: { type: String },
-            street: { type: String },
-            appartment: { type: String },
-            city: { type: String },
-            state: { type: String },
-            zipcode: { type: String },
-            phone: { type: String },
-            email: { type: String }
-        }
-    ]
-  
-  })
-  const orderSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
-    },
-  
-    orders: [
-        {
-            fname: { type: String },
-            lname: { type: String },
-            phone: { type: Number },
-            paymentMethod: { type: String },
-            paymentStatus: { type: String },
-            totalPrice: { type: Number },
-            totalQuantity: { type: Number },
-            productDetails: { type: Array },
-            shippingAddress: { type: Object },
-            paymentMethod: String,
-            status: {
-                type: Boolean,
-                default: true
-            },
-            paymentType: String,
-            createdAt: {
-                type: Date,
-                default: new Date()
-            },
-            orderConfirm: { type: String, default: "ordered" }
-        }
-    ]
-  })
+const addressSchema = new Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    Address: [{
+        fname: { type: String },
+        lname: { type: String },
+        street: { type: String },
+        appartment: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zipcode: { type: String },
+        phone: { type: String },
+        email: { type: String }
+    }]
+}, { timestamps: true });
 
-  const wishListSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
-    },
-    wishList: [
-        {
-            productId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product',
-                required: true
-            },
+const orderSchema = new Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    orders: [{
+        fname: { type: String },
+        lname: { type: String },
+        phone: { type: Number },
+        paymentMethod: { type: String },
+        paymentStatus: { type: String },
+        totalPrice: { type: Number },
+        totalQuantity: { type: Number },
+        productDetails: { type: Array },
+        shippingAddress: { type: Object },
+        paymentMethod: { type: String },
+        status: { type: Boolean, default: true },
+        paymentType: { type: String },
+        orderConfirm: { type: String, default: "ordered" }
+    }]
+}, { timestamps: true });
 
-            createdAt: {
-                type: Date,
-                default: Date.now
-            }
-        }
-    ]
-})
+const wishListSchema = new Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    wishList: [{
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }
+    }]
+}, { timestamps: true });
+
 
 
 

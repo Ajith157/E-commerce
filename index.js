@@ -39,7 +39,7 @@ app.use(session({
     databaseName: process.env.DATABASE_NAME
   }),
   cookie: {
-    maxAge: 1000 * 60 * 24 * 10, // 10 days
+    maxAge: 1000 * 60 * 24 * 10, 
   },
 }));
 

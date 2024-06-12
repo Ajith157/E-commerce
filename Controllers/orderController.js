@@ -4,6 +4,8 @@ const cartHelper=require('../Helper/cartHelper')
 const userHelper =require('../Helper/userHelper')
 
 
+//Handles the POST request to save user address.
+
 const postAddress = (req, res) => {
     let data = req.body;
     let userId = req.session.user._id;
@@ -16,6 +18,8 @@ const postAddress = (req, res) => {
             res.status(500).json({ message: error.message });
         });
 };
+
+// Handles the GET request to retrieve the address details for editing.
 
 const getEditAddress = (req, res) => {
     try {
@@ -33,6 +37,8 @@ const getEditAddress = (req, res) => {
     }
 };
 
+//Handles the PATCH request to update user address.
+
 const patchEditAddress = (req, res) => {
     try {
         let addressId = req.params.id;
@@ -49,6 +55,8 @@ const patchEditAddress = (req, res) => {
     }
 };
 
+//Handles the DELETE request to delete a user address.
+
 const deleteAddress = (req, res) => {
     let userId = req.session.user._id;
     let addressId = req.params.id;
@@ -61,6 +69,8 @@ const deleteAddress = (req, res) => {
             res.status(500).json({ message: error.message });
         });
 };
+
+// Handles the GET request to retrieve checkout details.
 
 const getcheckOut= async (req, res) => {
     try {
@@ -85,6 +95,8 @@ const getcheckOut= async (req, res) => {
     }
 };
 
+//Handles the POST request to place an order.
+
 const postCheckout= async (req, res) => {
     try {
         let userId = req.session.user._id;
@@ -96,13 +108,15 @@ const postCheckout= async (req, res) => {
         if (data.payment_option === "COD") {
             res.json({ success: true, message: "Order placed successfully via COD." });
         } else {
-            // Handle other payment options here if needed
+           
             res.status(400).json({ error: "Invalid payment option" });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
+//Handles the GET request to retrieve user profile data.
 
 const getProfile= async (req, res) => {
     try {

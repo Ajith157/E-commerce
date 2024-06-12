@@ -1,27 +1,24 @@
 const { UserModel } = require("../models/Schema");
 const bcrypt = require("bcrypt");
 const sendEmail = require('../utils/sendEmail')
-const nodemailer=require('nodemailer')
-const {ProductModel}=require('../models/Schema')
+const nodemailer = require('nodemailer')
+const { ProductModel } = require('../models/Schema')
 
-
+// Signs up a new user.
 
 const signupUser = async (userData) => {
   try {
-    const { username,email,password,first_name,last_name,phonenumber } = userData;
+    const { username, email, password, first_name, last_name, phonenumber } = userData;
 
-    // Check if user already exists
     const existingUser = await UserModel.findOne({ username });
 
     if (existingUser) {
-      // User with this username already exists
+
       return { success: false, message: "User is already exist." };
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user instance
     const newUser = new UserModel({
       username,
       password: hashedPassword,
@@ -31,7 +28,7 @@ const signupUser = async (userData) => {
       phonenumber,
     });
 
-    // Save the new user to the database
+
     await newUser.save();
 
 
@@ -42,7 +39,7 @@ const signupUser = async (userData) => {
     return { success: true, message: "User signed successfully." };
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
-      
+
       return { success: false, message: "Email is already taken." };
     }
     console.error("Error during signup:", error);
@@ -50,22 +47,22 @@ const signupUser = async (userData) => {
   }
 };
 
+//Logs in a user with the provided email and password.
+
 const loginUser = async (email, password) => {
   try {
-    // Find user by email
+
     const user = await UserModel.findOne({ email });
 
-    // If user is not found, return error message
     if (!user) {
       return { success: false, message: "Invalid username or password." };
     }
 
-    // Compare the provided password with the hashed password stored in the database
     const passwordMatch = await bcrypt.compare(password, user.password);
 
-    // If passwords match, return success status along with the user object
+
     if (passwordMatch) {
-      return { success: true, user }; // Return user object along with success status
+      return { success: true, user };
     } else {
       return { success: false, message: "Invalid username or password." };
     }
@@ -75,20 +72,21 @@ const loginUser = async (email, password) => {
   }
 };
 
+//Sends a password reset email to the specified email address.
 
 
-const sendResetEmail = async (email,host,token) => {
- 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.NODEMAILER_PASSWORD,
-      },
-    });
- 
+const sendResetEmail = async (email, host, token) => {
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.NODEMAILER_EMAIL,
+      pass: process.env.NODEMAILER_PASSWORD,
+    },
+  });
+
 
   const mailOptions = {
     to: email,
@@ -103,18 +101,21 @@ const sendResetEmail = async (email,host,token) => {
   await transporter.sendMail(mailOptions);
 };
 
+//Fetches the newly added products.
 
 const getNewlyAddedProducts = async () => {
   try {
-      
-      const newlyAdded = await ProductModel.find().sort({ createdAt: -1 });
-      return newlyAdded;
+
+    const newlyAdded = await ProductModel.find().sort({ createdAt: -1 });
+    return newlyAdded;
   } catch (error) {
-      throw error;
+    throw error;
   }
 };
 
- const getQueriesOnShop= async (query) => {
+//Fetches products based on search, sort, and filter queries.
+
+const getQueriesOnShop = async (query) => {
   const search = query?.search;
   const sort = query?.sort;
   const filter = query?.filter;
@@ -122,84 +123,86 @@ const getNewlyAddedProducts = async () => {
   const perPage = 10;
 
   try {
-      let filterObj = {};
+    let filterObj = {};
 
-      if (filter === 'category=MEN') {
-          filterObj = { category: 'MEN' };
-      } else if (filter === 'category=WOMEN') {
-          filterObj = { category: 'WOMEN' };
-      } else if (filter === 'category=KIDS') {
-          filterObj = { category: 'KIDS' };
-      }
+    if (filter === 'category=MEN') {
+      filterObj = { category: 'MEN' };
+    } else if (filter === 'category=WOMEN') {
+      filterObj = { category: 'WOMEN' };
+    } else if (filter === 'category=KIDS') {
+      filterObj = { category: 'KIDS' };
+    }
 
-      // Building search query
-      let searchQuery = {};
+    // Building search query
+    let searchQuery = {};
 
-      if (search) {
-          searchQuery = {
-              $or: [
-                  { name: { $regex: search, $options: 'i' } },
-                  { description: { $regex: search, $options: 'i' } }
-              ]
-          };
-      }
-
-      // Building object based on query parameter
-      let sortObj = {};
-
-      if (sort === '-price') {
-          sortObj = { price: -1 };
-      } else if (sort === 'price') {
-          sortObj = { price: 1 };
-      }
-
-      const skip = (page - 1) * perPage;
-      const product = await productShema.product.find({
-          ...searchQuery,
-          ...filterObj,
-      })
-          .sort(sortObj)
-          .skip(skip)
-          .limit(perPage);
-
-      const totalProducts = await productShema.product.countDocuments({
-          ...searchQuery,
-          ...filterObj,
-      });
-
-      const totalPages = Math.ceil(totalProducts / perPage);
-
-      if (product.length === 0) {
-          return {
-              noProductFound: true,
-              Message: "No results found."
-          };
-      }
-
-      return {
-          product,
-          noProductFound: false,
-          currentPage: page,
-          totalPages,
+    if (search) {
+      searchQuery = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } }
+        ]
       };
+    }
+
+    // Building object based on query parameter
+    let sortObj = {};
+
+    if (sort === '-price') {
+      sortObj = { price: -1 };
+    } else if (sort === 'price') {
+      sortObj = { price: 1 };
+    }
+
+    const skip = (page - 1) * perPage;
+    const product = await productShema.product.find({
+      ...searchQuery,
+      ...filterObj,
+    })
+      .sort(sortObj)
+      .skip(skip)
+      .limit(perPage);
+
+    const totalProducts = await productShema.product.countDocuments({
+      ...searchQuery,
+      ...filterObj,
+    });
+
+    const totalPages = Math.ceil(totalProducts / perPage);
+
+    if (product.length === 0) {
+      return {
+        noProductFound: true,
+        Message: "No results found."
+      };
+    }
+
+    return {
+      product,
+      noProductFound: false,
+      currentPage: page,
+      totalPages,
+    };
   } catch (error) {
-      console.error("Error fetching products:", error);
-      throw error; 
+    console.error("Error fetching products:", error);
+    throw error;
   }
 };
+
+//Fetches all products from the shop.
 
 const getShop = () => {
   try {
     return new Promise((resolve, reject) => {
       ProductModel.find().then((product) => {
         if (product) {
-          resolve({ product }); 
+          resolve({ product });
         } else {
           console.log('Product not found');
-          resolve({ product: [] }); 
+          resolve({ product: [] });
         }
       }).catch(error => {
-        reject(error); 
+        reject(error);
       });
     });
   } catch (error) {
@@ -209,7 +212,9 @@ const getShop = () => {
   }
 };
 
-const getProductDetail= (proId) => {
+//Fetches product details by ID.
+
+const getProductDetail = (proId) => {
   return new Promise((resolve, reject) => {
     ProductModel.findById({ _id: proId }).then((response) => {
       resolve(response);
@@ -219,19 +224,23 @@ const getProductDetail= (proId) => {
   });
 };
 
+//Fetches user details by ID.
+
 const getUser = (userId) => {
   return new Promise((resolve, reject) => {
     UserModel.findById({ _id: userId }).then((response) => {
       if (response) {
-        resolve(response); 
+        resolve(response);
       } else {
-        reject({ message: "User not found" }); 
+        reject({ message: "User not found" });
       }
     }).catch((error) => {
-      reject(error); 
+      reject(error);
     });
   });
 };
+
+//Updates user data.
 
 const changeUserData = (userId, data) => {
   return new Promise((resolve, reject) => {
@@ -258,14 +267,36 @@ const changeUserData = (userId, data) => {
   });
 };
 
+const sorting = (sortOption) => {
+
+  return new Promise(async (resolve, reject) => {
+    let products;
+    if (sortOption === "low-to-high") {
+
+      products = await ProductModel.find().sort({ price: 1 }).exec();
+    } else if (sortOption === "high-to-low") {
+
+      products = await ProductModel.find().sort({ price: -1 }).exec();
+    } else {
+
+      products = await ProductModel.find().exec();
+    }
 
 
-module.exports = { signupUser,
-   loginUser,
-   sendResetEmail
-   ,getNewlyAddedProducts,
-   getShop,
-   getProductDetail,
-   getUser,
-   changeUserData
-   };
+    resolve(products);
+  });
+}
+
+
+
+module.exports = {
+  signupUser,
+  loginUser,
+  sendResetEmail,
+  getNewlyAddedProducts,
+  getShop,
+  getProductDetail,
+  getUser,
+  changeUserData,
+  sorting
+};

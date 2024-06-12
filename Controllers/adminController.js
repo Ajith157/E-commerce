@@ -9,7 +9,7 @@ const {getPreviousImage}=require('../Helper/adminHelper')
 
 
 
-
+//Sends a JSON response for the login page request.
 
 const getLogin = (req, res) => {
     try {
@@ -20,6 +20,7 @@ const getLogin = (req, res) => {
     }
 }
 
+//Handles the POST request for the login process.
 
 const postLogin = (req, res) => {
     let data = req.body;
@@ -34,6 +35,7 @@ const postLogin = (req, res) => {
     });
 };
 
+// Handles the GET request for the logout process.
 
 const getLogout = (req, res) => {
     try {
@@ -45,18 +47,23 @@ const getLogout = (req, res) => {
     }
 };
 
+//Handles the GET request to retrieve the list of all users.
 
 const getUserList = async (req, res) => {
     try {
         const admin = req.session.admin;
+      
 
-        const userData = await adminHelper.getUser();
+        const userData = await adminHelper.getAllUsers();
         res.json(userData);
+        
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+//Handles the GET request to render the add product page.
 
 const getAddproduct = (req, res) => {
     const admin = req.session.admin;
@@ -68,7 +75,7 @@ const getAddproduct = (req, res) => {
     }
 };
 
-
+//Handles the POST request to add a new product.
 
 const postAddproduct = async (req, res) => {
     try {
@@ -78,11 +85,15 @@ const postAddproduct = async (req, res) => {
             return res.status(400).json({ success: false, message: "No files uploaded" });
         }
 
-        const fileNames = files.map(file => file.filename);
-        console.log(req.body, 'bbbbbbbbbbbb');
+      
+        const fileNames = [];
+        ['image1', 'image2', 'image3', 'image4'].forEach(field => {
+            if (files[field]) {
+                fileNames.push(files[field][0].filename);
+            }
+        });
+       
         const product = req.body;
-
-
 
         product.img = fileNames;
 
@@ -93,6 +104,9 @@ const postAddproduct = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+//Handles the GET request to retrieve a product for editing
+
 
 const getEditproduct = (req, res) => {
     const admin = req.session.admin;
@@ -113,37 +127,40 @@ const getEditproduct = (req, res) => {
         });
 };
 
-// const postEditproduct = async (req, res) => {
-  
-//     console.log(req.params,'pppppppppppp');
-//     console.log(req.files,'ffffffffffff');
-//     const proId = req.params.id;
-//     const files = req.files; 
-//     const image = [];
+ //Handles the POST request to update a product.
 
+ const postEditProduct = async (req, res) => {
+    try {
+        
+        const proId = req.params.id;
+        const files = req.files;
+        const image = [];
 
+   
+        if (!proId) {
+            throw new Error('Product ID is undefined');
+        }
 
-//     try {
-//         const previousImage = await getPreviousImage(proId);
+        const previousImage = await getPreviousImage(proId);
+
+        for (let i = 0; i < 4; i++) {
+            if (files && files[`image${i+1}`]) { 
+                image.push(files[`image${i+1}`][0].filename);
+            } else {
+                image.push(previousImage[i]);
+            }
+        }
+
+        await adminHelper.updateProduct(proId, req.body, image);
       
+        res.status(200).json({ message: 'Product updated successfully' });
+    } catch (error) {
+        console.error('Error in postEditProduct:', error);
+        res.status(500).json({ message: 'Failed to update product', error: error.message });
+    }
+};
 
-//         // Ensure to loop through and replace only the existing images
-//         for (let i = 0; i < 4; i++) {
-//             if (files[i]) {
-//                 image.push(files[i].filename);
-//             } else {
-//                 image.push(previousImage[i]);
-//             }
-//         }
-
-//         await postEditproduct(proId, req.body, image);
-//         res.status(200).json({ message: 'Product updated successfully' });
-//     } catch (error) {
-//         console.error('Error in postEditproduct:', error); // More detailed logging
-//         res.status(500).json({ message: 'Failed to update product', error: error.message });
-//     }
-// };
-
+// Handles the GET request to retrieve the list of products.
 
 const getProductList = async (req, res) => {
     try {
@@ -159,6 +176,7 @@ const getProductList = async (req, res) => {
     }
 };
 
+// Handles the DELETE request to delete a product.
 
 const deleteProduct = (req, res) => {
     const proId = req.params.id;
@@ -173,13 +191,17 @@ const deleteProduct = (req, res) => {
         });
 };
 
+//Handles the GET request to retrieve categories for adding a new category.
+
 const getAddcategory=async(req,res)=>{
     const admin=req.session.admin;
     const categories=await CategoryModel.category.find()
 
     res.json(categories)
 
-}
+};
+
+// Handles the POST request to add a new category.
 
 const postAddcategory = (req, res) => {
     
@@ -193,6 +215,8 @@ const postAddcategory = (req, res) => {
         });
 };
 
+//Handles the GET request to retrieve category details for editing.
+
 const getEditcategory=async(req,res)=>{
        
     const categoryId=req.params.id
@@ -201,6 +225,8 @@ const getEditcategory=async(req,res)=>{
 
     res.json(response)
 }
+
+// Handles the POST request to update a category.
 
 const postEditcategory = async (req, res) => {
     const id = req.params.id;
@@ -214,6 +240,7 @@ const postEditcategory = async (req, res) => {
     }
 };
 
+// Handles the DELETE request to delete a category.
 
 const deleteCategory = async (req, res) => {
     const catId = req.params.id;
@@ -229,6 +256,8 @@ const deleteCategory = async (req, res) => {
         res.status(500).json({ success: false, message: "An error occurred while deleting the category", error: error.message });
     }
 };
+
+//Handles the GET request to retrieve the list of orders for a user.
 
 const getOrderList = async (req, res) => {
     try {
@@ -248,12 +277,12 @@ const getOrderList = async (req, res) => {
       const { success, user: foundUser, orders } = await orderHelper.getOrders(userId);
   
       if (!success) {
-        // If getOrders failed for some reason
+        
         return res.status(500).json({ error: 'Failed to fetch orders', details: orders });
       }
   
       if (!orders || orders.length === 0) {
-        // If user found but no orders
+       
         return res.status(404).json({ error: 'No orders found for this user' });
       }
   
@@ -264,7 +293,7 @@ const getOrderList = async (req, res) => {
     }
   };
   
-  
+//Handles the GET request to retrieve order details.
 
 const getOrderDetails= async (req, res) => {
     try {
@@ -273,7 +302,7 @@ const getOrderDetails= async (req, res) => {
         let orderId = req.query.orderId
       
         let userId = req.query.userId
-        console.log(orderId,userId,'qqqqqqqqqqqqqqqqqqqqq');
+     
      
 
         if (!orderId || !userId) {
@@ -281,18 +310,18 @@ const getOrderDetails= async (req, res) => {
         }
 
         let userDetails = await userController.getDetails(userId);
-        console.log(userDetails,'ddddddddddddddd');
+     
 
         let address = await orderHelper.getOrderAddress(userId, orderId);
-        console.log(address,'aaaa');
+     
         let orderDetails = await orderHelper.getSubOrders(orderId, userId);
-        console.log(orderDetails,'rrrrrrrr');
+  
         let product = await orderHelper.getOrderedProducts(orderId, userId);
-        console.log(product,'ppppp');
+     
         let productTotalPrice = await orderHelper.getTotal(orderId, userId);
-        console.log(productTotalPrice,'tttttt');
+  
         let orderTotalPrice = await orderHelper.getOrderTotal(orderId, userId);
-        console.log(orderTotalPrice,'ooo');
+     
 
         res.json({
             admin,
@@ -333,7 +362,7 @@ module.exports = {
     getAddproduct,
     postAddproduct,
     getEditproduct,
-   
+    postEditProduct,
     getProductList,
     deleteProduct,
     getAddcategory,

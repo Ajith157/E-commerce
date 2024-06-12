@@ -2,6 +2,9 @@ const { response } = require('express');
 const { ObjectId } = require("mongodb")
 const {cartModel,ProductModel}=require('../models/Schema')
 
+
+//Adds a product to the user's cart.
+
 const addToCart= (proId, userId) => {
   const proObj = {
     productId: proId,
@@ -42,6 +45,8 @@ const addToCart= (proId, userId) => {
   });
 };
 
+// Retrieves the count of items in the user's cart.
+
 const getCartCount= (userId) => {
   return new Promise((resolve, reject) => {
     let count = 0;
@@ -55,6 +60,8 @@ const getCartCount= (userId) => {
     });
   });
 };
+
+//Retrieves the items in the user's cart with details.
 
 const getCartItems= (userId) => {
   return new Promise((resolve, reject) => {
@@ -90,6 +97,8 @@ const getCartItems= (userId) => {
   });
 };
 
+//Updates the quantity of a product in the user's cart.
+
 const updateQuantity = async (data) => {
   try {
     const { cartId, proId, count, quantity } = data;
@@ -119,10 +128,12 @@ const updateQuantity = async (data) => {
       return { status: true, newQuantity: newQuantity };
     }
   } catch (error) {
-    // Handle error
+ 
     return { status: false, message: error.message };
   }
 };
+
+//Deletes a product from the user's cart.
 
 const deleteProduct= (data) => {
   let cartId = data.cartId

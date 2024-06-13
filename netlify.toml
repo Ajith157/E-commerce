@@ -1,0 +1,30 @@
+[build]
+  command = "npm run build" # Your build command
+  publish = "public" # Directory to deploy
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[context.production.environment]
+  # Environment variables for production
+  MONGODB_URL = "mongodb+srv://ajithpr9999:p3K7CwjRH5zfpmcg@cluster0.ayyxim7.mongodb.net/"
+  PORT = "5000" # Make sure your server listens on this port
+  DATABASE_NAME = "test"
+  NODEMAILER_EMAIL = "developer9961@gmail.com"
+  NODEMAILER_PASSWORD = "knqb pyrp fdrm pjjs"
+
+[context.branch-deploy.environment]
+  # Environment variables for branch deploys
+  MONGODB_URL = "mongodb+srv://ajithpr9999:p3K7CwjRH5zfpmcg@cluster0.ayyxim7.mongodb.net/"
+  PORT = "5000"
+  DATABASE_NAME = "test"
+  NODEMAILER_EMAIL = "developer9961@gmail.com"
+  NODEMAILER_PASSWORD = "knqb pyrp fdrm pjjs"
+
+[context.deploy-preview.environment]
+  # Environment variables for deploy previews
+  MONGODB_URL = "mongodb+srv://ajithpr9999:p3K7CwjRH5zfpmcg@cluster0.ayyxim7.mongodb.net/"
+  PORT = "5000"
+  DATABASE_NAME = "test"
+  NODEMAILER_EMAIL = "developer9961@gmail.com"
+  NODEMAILER_PASSWORD = "knqb pyrp fdrm pjjs"

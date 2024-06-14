@@ -11,7 +11,7 @@ const cookieParser = require('cookie-parser');
 const ConnectMongodbSession = require('connect-mongodb-session');
 const multer = require('multer');
 const path = require('path');  
-const auth=require('../middleware/auth.js')
+
 
 dotenv.config();
 const app = express();

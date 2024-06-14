@@ -34,55 +34,55 @@ router.post('/forgot-password',userController. forgotPassword);
 router.post('/reset/:token', userController.resetPassword);
 
 //Route handler for fetching product details (user access required)
-router.get('/product-details/:id',auth.userAuth, userController.getProductdetails)
+router.get('/product-details/:id', userController.getProductdetails)
 
 //Route handler for handling add to cart funtionality (use access required)
-router.post('/add-to-cart/:id',auth.userAuth, cartController.addToCart)
+router.post('/add-to-cart/:id', cartController.addToCart)
 
 //Route handler for fetching cart product list (user access required)
-router.get('/cart-list',auth.userAuth, cartController.getCart)
+router.get('/cart-list', cartController.getCart)
 
 //Route handler for change the product quantity from the cart (user access required)
-router.patch('/change-product-quantity',auth.userAuth, cartController.updateQuantity)
+router.patch('/change-product-quantity', cartController.updateQuantity)
 
 //Route handler for delete product from the cart (user access required)
 router.delete('/delete-product-cart', cartController.deleteProduct)
 
 //Route handler for add address of the user (user access required)
-router.route('/add-address').post(auth.userAuth, orderController.postAddress)
+router.route('/add-address').post(orderController.postAddress)
 
 //Route handler for fetching address page to edit address (user access required)
-router.get('/edit-address/:id', auth.userAuth, orderController.getEditAddress);
+router.get('/edit-address/:id',  orderController.getEditAddress);
 
 //Route handler for edit user address (user access required)
-router.patch('/edit-address/:id', auth.userAuth, orderController.patchEditAddress);
+router.patch('/edit-address/:id',  orderController.patchEditAddress);
 
 //Route handler for delete address of user (user access required)
-router.route('/delete-address/:id').delete(auth.userAuth, orderController.deleteAddress)
+router.route('/delete-address/:id').delete( orderController.deleteAddress)
 
 //Route handler for fetching checkout (user access required)
-router.get('/check-out', auth.userAuth, orderController.getcheckOut);
+router.get('/check-out',  orderController.getcheckOut);
 
 //Route handler for post checkout (user access required)
-router.post('/check-out', auth.userAuth, orderController.postCheckout)
+router.post('/check-out',  orderController.postCheckout)
 
 //Route handler for get profile details (user access required)
-router.get('/get-profile',auth.userAuth,orderController.getProfile);
+router.get('/get-profile',orderController.getProfile);
 
 //Route handler for wishlist product (user access required)
-router.post('/add-to-wishlist/:id',auth.userAuth,userController.addWishList);
+router.post('/add-to-wishlist/:id',userController.addWishList);
 
 //Route handler for fetching wishlist products (user access required)
-router.get('/wishlist',auth.userAuth,userController.getWishlist)
+router.get('/wishlist',userController.getWishlist)
 
 //Route handler for delete wishlist product (user access required)
-router.route('/remove-product-wishlist').delete(auth.userAuth, userController.removeProductWishlist)
+router.route('/remove-product-wishlist').delete( userController.removeProductWishlist)
 
 //Route handler for change user data (user access required)
-router.route('/change-user-data/:id').post(auth.userAuth, userController.changeUserData)
+router.route('/change-user-data/:id').post( userController.changeUserData)
 
 //Route handler for sorting products (user access required)
-router.get("/sort/:id", auth.userAuth, userController.sort)
+router.get("/sort/:id",  userController.sort)
 
 
 

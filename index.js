@@ -13,7 +13,6 @@ const multer = require('multer');
 const path = require('path');  
 const fs = require('fs');     
 
-
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +26,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/backend')));
 
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: true,
+  credentials: true // this is important to allow credentials (cookies)
+}));
 
 app.use(cookieParser());
 app.use(session({
@@ -46,9 +49,6 @@ app.use(session({
     sameSite: 'strict', // Prevents the browser from sending this cookie along with cross-site requests
   },
 }));
-
-
-
 
 // Routes
 app.use('/', userRoutes); 

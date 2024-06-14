@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const ConnectMongodbSession = require('connect-mongodb-session')(session); // Initialize ConnectMongodbSession
+const path = require('path'); // Add this line to import path module
 
 dotenv.config();
 const app = express();

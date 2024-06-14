@@ -8,7 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const ConnectMongodbSession = require('connect-mongodb-session');
+const ConnectMongoDBSession = require('connect-mongodb-session')(session);
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -21,18 +21,7 @@ const PORT = process.env.PORT || 5000;
 dbConnection();
 
 // Configure CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  );
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    return res.status(200).json({});
-  }
-  next();
-});
+app.use(cors()); // Allow all origins - You can modify this as per your requirements
 
 // Other middleware
 app.use(bodyParser.json());
@@ -43,17 +32,21 @@ app.use(express.static(path.join(__dirname, 'public/backend')));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
+// Initialize session store
+const sessionStore = new ConnectMongoDBSession({
+  uri: process.env.MONGODB_URL,
+  collection: 'sessions', // Collection name for sessions
+  databaseName: process.env.DATABASE_NAME,
+  expires: 1000 * 60 * 60 * 24 * 10, // Session expiration time (10 days)
+});
+
 app.use(session({
-  saveUninitialized: false,
-  secret: 'sessionKey',
+  secret: process.env.SESSION_SECRET || 'default_secret',
   resave: false,
-  store: new (ConnectMongodbSession(session))({
-    uri: process.env.MONGODB_URL,
-    collection: "session",
-    databaseName: process.env.DATABASE_NAME
-  }),
+  saveUninitialized: false,
+  store: sessionStore,
   cookie: {
-    maxAge: 1000 * 60 * 24 * 10,
+    maxAge: 1000 * 60 * 24 * 10, // Session expiration time (10 days)
     sameSite: 'none', // Ensure cookies are sent in cross-origin requests
     secure: true, // Set secure flag if using HTTPS
   },
@@ -65,5 +58,5 @@ app.use('/admin', adminRoutes);
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Dev server running on port: ${PORT}`);
+  console.log(`Server running on port: ${PORT}`);
 });

@@ -8,10 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const ConnectMongodbSession = require('connect-mongodb-session');
-const multer = require('multer');
-const path = require('path');  
-const fs = require('fs');     
+const ConnectMongodbSession = require('connect-mongodb-session')(session); // Initialize ConnectMongodbSession
 
 dotenv.config();
 const app = express();
@@ -33,24 +30,24 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+
+// Set up session middleware
 app.use(session({
-  saveUninitialized: false,
   secret: 'sessionKey',
   resave: false,
-  store: new (ConnectMongodbSession(session))({
-      uri: process.env.MONGODB_URL,
-      collection: 'session',
-      databaseName: process.env.DATABASE_NAME
+  saveUninitialized: false,
+  store: new ConnectMongodbSession({
+    uri: process.env.MONGODB_URL,
+    collection: 'session',
+    databaseName: process.env.DATABASE_NAME
   }),
   cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 10, // 10 days
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: false, // Try setting this to false
-      sameSite: 'strict',
-  },
+    maxAge: 1000 * 60 * 60 * 24 * 10, // 10 days
+    httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+    secure: false, // Set it to true in production if you're using HTTPS
+    sameSite: 'strict' // 'lax' might be a better option for cross-site requests
+  }
 }));
-
-
 
 // Routes
 app.use('/', userRoutes); 
@@ -58,5 +55,5 @@ app.use('/admin', adminRoutes);
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Dev server running on port: ${PORT}`);
+  console.log(`Server running on port: ${PORT}`);
 });

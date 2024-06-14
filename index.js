@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/backend')));
 
 const corsOptions = {
-  origin: 'https://your-frontend-domain.com', // Replace with your frontend domain
+  origin: 'https://janki-design.onrender.com', // Replace with your frontend domain
   credentials: true, // Allow credentials (cookies) to be sent
 };
 app.use(cors(corsOptions));

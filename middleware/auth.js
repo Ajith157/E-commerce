@@ -1,5 +1,6 @@
 module.exports = {
   adminAuth: (req, res, next) => {
+    console.log('Checking admin session:', req.session);
     if (req.session.admin) {
       console.log('Admin authenticated:', req.session.admin);
       next();
@@ -10,6 +11,7 @@ module.exports = {
   },
 
   userAuth: (req, res, next) => {
+    console.log('Checking user session:', req.session);
     if (req.session.user) {
       console.log('User authenticated:', req.session.user);
       next();

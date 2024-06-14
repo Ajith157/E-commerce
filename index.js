@@ -27,8 +27,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/backend')));
 
 const corsOptions = {
-  origin: 'https://janki-design.onrender.com', // Replace with your frontend domain
+  origin: true, // Allow requests from any origin
   credentials: true, // Allow credentials (cookies) to be sent
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 
@@ -47,15 +49,21 @@ store.on('error', function(error) {
 
 app.use(session({
   saveUninitialized: false,
-  secret: 'sessionKey',
+  secret: process.env.SESSION_SECRET || 'sessionKey',
   resave: false,
   store: store,
   cookie: {
-    maxAge: 1000 * 60 * 24 * 10, 
+    maxAge: 1000 * 60 * 24 * 10,
     sameSite: 'none',
-    secure: true, // Ensure this matches your environment setup
+    secure: process.env.NODE_ENV === 'production', // Ensure this matches your environment setup
   },
 }));
+
+// Middleware to log session details
+app.use((req, res, next) => {
+  console.log('Session details:', req.session);
+  next();
+});
 
 // Routes
 app.use('/', userRoutes); 

@@ -1,4 +1,3 @@
-// auth.js
 module.exports = {
   adminAuth: (req, res, next) => {
       console.log("Admin Authentication Middleware");

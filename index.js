@@ -38,17 +38,19 @@ app.use(session({
   secret: 'sessionKey',
   resave: false,
   store: new (ConnectMongodbSession(session))({
-    uri: process.env.MONGODB_URL,
-    collection: 'session',
-    databaseName: process.env.DATABASE_NAME
+      uri: process.env.MONGODB_URL,
+      collection: 'session',
+      databaseName: process.env.DATABASE_NAME
   }),
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 * 10, // 10 days
-    httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-    secure: process.env.NODE_ENV === 'production', // Ensures the cookie is only used over HTTPS
-    sameSite: 'strict', // Prevents the browser from sending this cookie along with cross-site requests
+      maxAge: 1000 * 60 * 60 * 24 * 10, // 10 days
+      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+      secure: false, // Try setting this to false
+      sameSite: 'strict',
   },
 }));
+
+
 
 // Routes
 app.use('/', userRoutes); 

@@ -67,6 +67,7 @@ const getUserList = async (req, res) => {
 
 const getAddproduct = (req, res) => {
     const admin = req.session.admin;
+   
 
     if (admin) {
         res.json({ admin });

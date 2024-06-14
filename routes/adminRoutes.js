@@ -14,7 +14,7 @@ router.post('/login',adminController.postLogin)
 router.post('/logout',adminController.getLogout)
 
 // Route handler for retrieving the list of users (admin access required).
-router.get('/userlist', adminController.getUserList);
+router.get('/userlist',auth.adminAuth, adminController.getUserList);
 
 //Route handler for rendering the add product page (admin access required).
 router.get('/addproducts',auth.adminAuth,adminController.getAddproduct)

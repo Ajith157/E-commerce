@@ -11,6 +11,7 @@ const cookieParser = require('cookie-parser');
 const ConnectMongodbSession = require('connect-mongodb-session');
 const multer = require('multer');
 const path = require('path');  
+const fs = require('fs');     
 
 
 dotenv.config();
@@ -26,16 +27,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/backend')));
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-  exposedHeaders: ['set-cookie'], // Allow setting cookies from backend
-}));
-
+app.use(cors());
 
 app.use(cookieParser());
-
-
 app.use(session({
   saveUninitialized: false,
   secret: 'sessionKey',
@@ -47,11 +41,8 @@ app.use(session({
   }),
   cookie: {
     maxAge: 1000 * 60 * 24 * 10, 
-    sameSite: 'none', // Ensure cookies are sent in cross-origin requests
-    secure: true, // Set secure flag if using HTTPS
   },
 }));
-
 
 
 

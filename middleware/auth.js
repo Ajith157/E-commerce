@@ -1,26 +1,21 @@
 module.exports = {
-  adminAuth: (req, res, next) => {
-      console.log("Admin Authentication Middleware");
-      console.log("Session Data:", req.session);
+    adminAuth: (req, res, next) => {
       if (req.session.admin) {
-          next();
+        next();
       } else {
-          console.log("Unauthorized Access");
-          res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: 'Unauthorized' });
       }
-  },
-
-  userAuth: (req, res, next) => {
-      console.log("User Authentication Middleware");
-      console.log("Session Data:", req.session);
+    },
+  
+    userAuth: (req, res, next) => {
+       
       if (req.session.user) {
-          next();
+        next();
       } else {
-          console.error('User not authenticated or missing _id');
-          res.status(401).json({ error: 'Unauthorized' });
+        console.error('User not authenticated or missing _id');
+        res.status(401).json({ error: 'Unauthorized' });
       }
-  },
+    },
 };
-
 
   

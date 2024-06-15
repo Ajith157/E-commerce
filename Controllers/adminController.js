@@ -50,6 +50,7 @@ const getLogout = (req, res) => {
 //Handles the GET request to retrieve the list of all users.
 
 const getUserList = async (req, res) => {
+    console.log(req.session.admin,'444444');
     try {
         const admin = req.session.admin;
       

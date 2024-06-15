@@ -183,10 +183,10 @@ const resetPassword = async (req, res) => {
 //Retrieves home page data.
 
 const getHome = async (req, res) => {
-  console.log("hhhhhhhhhhhhhhhhhhhhhhhhh");
+  console.log("GET request received for home");
   try {
     const newlyAdded = await userHelper.getNewlyAddedProducts();
-    console.log(newlyAdded,'qqqqqqqqqqqqqq');
+  
 
     let user = null;
     if (req.session && req.session.user) {

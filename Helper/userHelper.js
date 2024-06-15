@@ -107,6 +107,7 @@ const getNewlyAddedProducts = async () => {
   try {
 
     const newlyAdded = await ProductModel.find().sort({ createdAt: -1 });
+    console.log(newlyAdded,'wwwwwwwwwwww');
     return newlyAdded;
   } catch (error) {
     throw error;

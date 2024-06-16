@@ -28,7 +28,7 @@ app.use(express.static(path.join(__dirname, 'public/backend')));
 
 // Configure CORS to allow credentials
 app.use(cors({
-  origin: true, // Allow all origins or specify your allowed origins
+  origin: true,
   credentials: true
 }));
 app.use(cookieParser());
@@ -40,6 +40,10 @@ const store = new ConnectMongodbSession({
   databaseName: process.env.DATABASE_NAME
 });
 
+store.on('connected', () => {
+  console.log('Session store connected');
+});
+
 store.on('error', (error) => {
   console.error('Session store error:', error);
 });
@@ -48,12 +52,12 @@ store.on('error', (error) => {
 app.use(
   session({
     saveUninitialized: false,
-    secret:'sessionKey',
+    secret:  'sessionKey',
     resave: false,
     store: store,
     cookie: {
-      maxAge: 1000 * 60 * 24 * 10,
-      sameSite: 'lax', // Adjust based on your needs ('strict', 'lax', 'none')
+      maxAge: 1000 * 60 * 24 * 10, // 10 days
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Adjust based on deployment
       secure: process.env.NODE_ENV === 'production' // Ensure cookies are only sent over HTTPS in production
     }
   })
@@ -61,6 +65,7 @@ app.use(
 
 app.use((req, res, next) => {
   console.log(`${req.method} request received for ${req.url}`);
+  console.log(`Session data: ${JSON.stringify(req.session)}`);
   next();
 });
 

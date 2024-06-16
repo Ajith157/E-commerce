@@ -40,7 +40,7 @@ const postLogin = (req, res) => {
 
 const getLogout = (req, res) => {
     try {
-        req.session.admin = null;
+        req.sessions.admin = null;
         res.status(200).json({ success: true, message: "Admin logged out successfully." });
     } catch (error) {
         console.error("Error in logout :", error);
@@ -53,7 +53,7 @@ const getLogout = (req, res) => {
 const getUserList = async (req, res) => {
     console.log(req.session.admin,'444444');
     try {
-        const admin = req.session.admin;
+        const admin = req.sessions.admin;
       
 
         const userData = await adminHelper.getAllUsers();

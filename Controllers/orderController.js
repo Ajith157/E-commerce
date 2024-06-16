@@ -4,6 +4,8 @@ const cartHelper=require('../Helper/cartHelper')
 const userHelper =require('../Helper/userHelper')
 
 
+
+
 //Handles the POST request to save user address.
 
 const postAddress = (req, res) => {
@@ -101,20 +103,27 @@ const postCheckout= async (req, res) => {
     try {
         let userId = req.session.user._id;
         let data = req.body;
-
+        let total = data.total;
+              
       
-        const response = await orderHelper.placeOrder(data);
+        try {
+            const response = await orderHelper.placeOrder(data);
 
-        if (data.payment_option === "COD") {
-            res.json({ success: true, message: "Order placed successfully via COD." });
-        } else {
-           
-            res.status(400).json({ error: "Invalid payment option" });
+            if (data.payment_option === "COD") {
+                res.json({ codStatus: true });
+            } else if (data.payment_option === "razorpay") {
+                const order = await orderHelper.generateRazorpay(userId, total);
+                res.json(order);
+            } else {
+                res.json({ orderStatus: true, message: 'order placed successfully' });
+            }
+        } catch (error) {
+            res.json({ error: error.message });
         }
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.json({ error: error.message });
     }
-};
+}
 
 //Handles the GET request to retrieve user profile data.
 

@@ -2,7 +2,15 @@ const express = require('express')
 const { ObjectId } = require('mongodb')
 const {cartModel,addressModel,orderModel,ProductModel,UserModel} = require('../models/Schema')
 const mongoose = require('mongoose'); 
+const Razorpay=require('razorpay')
 
+const keyId = process.env.key_id
+const keySecret = process.env.key_secret
+
+var instance = new Razorpay({
+    key_id: "rzp_test_xztmEHhw6nGCRI",
+    key_secret: "aYOXpKbOXtjO5Yo2ggpZDwsw",
+});
 //Calculates the total checkout amount for a user's cart.
 
 const totalCheckOutAmount= (userId) => {
@@ -233,113 +241,119 @@ const getAddress= (userId) => {
 
 // Places an order for the specified user.
 
-const  placeOrder= (data) => {
 
-  return new Promise(async (resolve, reject) => {
-      try {
-          const productDetails = await cartModel.aggregate([
-              {
-                  $match: {
-                      user: new ObjectId(data.user)
-                  }
-              },
-              {
-                  $unwind: '$cartItems'
-              },
-              {
-                  $project: {
-                      item: "$cartItems.productId",
-                      quantity: "$cartItems.quantity"
-                  }
-              },
-              {
-                  $lookup: {
-                      from: "products",
-                      localField: "item",
-                      foreignField: "_id",
-                      as: "productDetails"
-                  }
-              },
-              {
-                  $unwind: "$productDetails"
-              },
-              {
-                  $project: {
-                      productId: "$productDetails._id",
-                      productName: "$productDetails.name",
-                      productPrice: "$productDetails.price",
-                      brand: "$productDetails.brand",
-                      quantity: "$quantity",
-                      category: "$productDetails.category",
-                      image: "$productDetails.img"
-                  }
-              }
-          ]);
 
-          const Address = await addressModel.aggregate([
-              {
-                  $match: { user: new ObjectId(data.user) }
-              },
-              {
-                  $unwind: "$Address"
-              },
-              {
-                  $match: { "Address._id": new ObjectId(data.address) }
-              },
-              {
-                  $project: { item: "$Address" }
-              }
-          ]);
+const placeOrder = async (data) => {
+  try {
+    // Debug log for input data
+    console.log("Input data:", data);
 
-          let orderStatus, paymentStatus;
+    // Fetch product details from the cart
+    const productDetails = await cartModel.aggregate([
+      { $match: { user: new ObjectId(data.user) } },
+      { $unwind: '$cartItems' },
+      {
+        $project: {
+          item: "$cartItems.productId",
+          quantity: "$cartItems.quantity",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "item",
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      { $unwind: "$productDetails" },
+      {
+        $project: {
+          productId: "$productDetails._id",
+          productName: "$productDetails.name",
+          productPrice: "$productDetails.price",
+          brand: "$productDetails.brand",
+          quantity: "$quantity",
+          category: "$productDetails.category",
+          image: "$productDetails.img",
+        },
+      },
+    ]);
 
-          if (data.payment_option === "COD") {
-              paymentStatus = "Placed";
-              orderStatus = "Success";
-          } else {
-              reject(new Error("Invalid payment option"));
-              return;
-          }
+    // Debug log for product details
+    console.log("Product details:", productDetails);
 
-          const orderData = {
-              name: Address[0].item.fname,
-              paymentStatus,
-              paymentMethod: data.payment_option,
-              productDetails,
-              shippingAddress: Address,
-              orderStatus,
-              totalPrice: data.totalPrice 
-          };
+    // Check if product details are available
+    if (!productDetails.length) {
+      throw new Error("No products found in the cart for the given user.");
+    }
 
-          const existingOrder = await orderModel.findOne({ user: data.user });
+    // Fetch user address
+    const address = await addressModel.aggregate([
+      { $match: { user: new ObjectId(data.user) } },
+      { $unwind: "$Address" },
+      { $match: { "Address._id": new ObjectId(data.address) } },
+      { $project: { item: "$Address" } },
+    ]);
 
-          if (existingOrder) {
-              await orderModel.updateOne(
-                  { user: data.user },
-                  { $push: { orders: orderData } }
-              );
-          } else {
-              const newOrder = new orderModel({
-                  user: data.user,
-                  orders: [orderData]
-              });
-              await newOrder.save();
-          }
+    // Debug log for address details
+    console.log("Address details:", address);
 
-          for (const purchasedProduct of productDetails) {
-              const originalProduct = await ProductModel.findById(purchasedProduct.productId);
-              originalProduct.quantity -= purchasedProduct.quantity;
-              await originalProduct.save();
-          }
+    // Check if address is available
+    if (!address.length) {
+      throw new Error("Address not found for the given user and address ID.");
+    }
 
-          await cartModel.deleteMany({ user: data.user });
+    // Determine order status based on payment option
+    let status, orderStatus;
+    if (data.payment_option === "COD") {
+      status = "Placed";
+      orderStatus = "Success";
+    } else {
+      status = "Pending";
+      orderStatus = "Pending";
+    }
 
-          resolve("Order placed successfully");
-      } catch (error) {
-          reject(error);
-      }
-  });
+    // Prepare order data
+    const orderData = {
+      name: address[0].item.fname,
+      paymentStatus: status,
+      paymentMethod: data.payment_option,
+      productDetails: productDetails,
+      shippingAddress: address[0].item,
+      orderStatus: orderStatus,
+      totalPrice: data.totalAmount, // Assuming totalAmount is the original price without discounts
+    };
+            console.log(orderData,'22222222222');
+    // Check if order already exists for the user
+    const existingOrder = await orderModel.findOne({ user: data.user });
+
+    if (existingOrder) {
+      await orderModel.updateOne(
+        { user: data.user },
+        { $push: { orders: orderData } }
+      );
+    } else {
+      const newOrder = new orderModel({
+        user: data.user,
+        orders: [orderData],
+      });
+      await newOrder.save();
+    }
+
+    // Remove the user's cart after placing the order
+    await cartModel.deleteMany({ user: data.user });
+
+    return { message: 'Order placed successfully' };
+  } catch (error) {
+    // Improved error handling with more context
+    console.error("Error in placeOrder function:", error);
+    throw new Error(error.message);
+  }
 };
+
+
+
 
 //Retrieves the count of items in the user's cart.
 
@@ -566,6 +580,37 @@ const getOrderTotal = (orderId, userId) => {
 };
 
 
+const generateRazorpay=(userId, total)=> {
+  return new Promise(async (resolve, reject) => {
+      try {
+          let orders = await orderModel.find({ user: userId });
+
+          if (orders.length === 0 || orders[0].orders.length === 0) {
+              return reject(new Error("No orders found for user."));
+          }
+
+          let order = orders[0].orders.slice().reverse();
+          let orderId = order[0]._id;
+
+          let  options = {
+              amount: total * 100,  // amount in the smallest currency unit
+              currency: "INR",
+              receipt: "" + orderId
+          };
+
+          instance.orders.create(options, function (err, order) {
+              if (err) {
+                  return reject(err);
+              } else {
+                  resolve(order);
+              }
+          });
+      } catch (error) {
+          reject(error);
+      }
+  });
+}
+
 
 
 
@@ -597,5 +642,7 @@ const getOrderTotal = (orderId, userId) => {
     getSubOrders,
     getOrderedProducts,
     getTotal,
-    getOrderTotal}
+    getOrderTotal,
+    generateRazorpay
+  }
   

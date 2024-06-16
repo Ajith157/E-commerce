@@ -66,6 +66,8 @@ router.get('/check-out', auth.userAuth, orderController.getcheckOut);
 //Route handler for post checkout (user access required)
 router.post('/check-out', auth.userAuth, orderController.postCheckout)
 
+
+
 //Route handler for get profile details (user access required)
 router.get('/get-profile',auth.userAuth,orderController.getProfile);
 
@@ -83,6 +85,8 @@ router.route('/change-user-data/:id').post(auth.userAuth, userController.changeU
 
 //Route handler for sorting products (user access required)
 router.get("/sort/:id", auth.userAuth, userController.sort)
+
+
 
 
 

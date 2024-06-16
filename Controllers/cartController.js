@@ -19,9 +19,7 @@ const addToCart = (req, res) => {
 
 //Handles the GET request to retrieve cart data.
 
-const getCart=async (req, res) => {
-
-
+const getCart = async (req, res) => {
   try {
     let userId = req.session.user._id;
     let user = req.session.user;
@@ -29,6 +27,17 @@ const getCart=async (req, res) => {
     let total = await orderHelper.totalCheckOutAmount(userId);
     let subTotal = await orderHelper.getSubTotal(userId);
     let cartItems = await cartHelper.getCartItems(userId);
+
+    if (cartItems.length === 0) {
+      return res.json({
+        message: "No items in the cart",
+        user: user,
+        cartItems: [],
+        count: count,
+        total: total,
+        subTotal: subTotal
+      });
+    }
 
     res.json({
       message: "Cart data retrieved successfully",
@@ -41,9 +50,8 @@ const getCart=async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-
-
 };
+
 
 //Handles the POST request to update item quantity in the cart
 

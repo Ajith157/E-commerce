@@ -3,6 +3,7 @@ const { ObjectId } = require('mongoose').Types;
 const mongoose = require('mongoose');
 const adminHelper = require('../Helper/adminHelper');
 const orderHelper=require('../Helper/orderHelper');
+const userHelper=require('../Helper/userHelper')
 const userController=require('../Controllers/userController')
 const { ProductModel, CategoryModel } = require('../models/Schema');
 const {getPreviousImage}=require('../Helper/adminHelper')
@@ -197,7 +198,7 @@ const deleteProduct = (req, res) => {
 
 const getAddcategory=async(req,res)=>{
     const admin=req.session.admin;
-    const categories=await CategoryModel.category.find()
+    const categories=await CategoryModel.find()
 
     res.json(categories)
 
@@ -265,12 +266,13 @@ const getOrderList = async (req, res) => {
     try {
       const userId = req.params.id;
       const admin = req.session.admin;
-  
+
+      
       if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
       }
   
-      const user = await adminHelper.getUser(userId);
+      const user = await userHelper.getUser(userId);
   
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -340,7 +342,10 @@ const getOrderDetails= async (req, res) => {
         console.error("Error fetching order details:", error);
         res.status(500).json({ error: "Internal server error" });
     }
-}
+};
+
+
+
 
 
 

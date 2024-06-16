@@ -151,7 +151,7 @@ const getAddCategory = async (data) => {
            await newCategory.save();
             return { status: true, message: "Category added successfully" };
         } else {
-            console.log('Category already exists');
+           
             return { status: false, message: "Category already exists" };
         }
     } catch (error) {
@@ -214,7 +214,7 @@ const deleteCategory = async (catId) => {
 
 
 module.exports = { doLogin,
-    getAllUsers,
+     getAllUsers,
      postAddproduct,
      geteditproduct,
      postEditCategory, 
@@ -223,5 +223,4 @@ module.exports = { doLogin,
      getPreviousImage,
      getAddCategory,
      deleteCategory,
-    
      updateProduct };

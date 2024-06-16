@@ -14,28 +14,47 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-dbConnection();
+// Database connection
+dbConnection().then(() => {
+  console.log('Connected to MongoDB');
+}).catch(err => {
+  console.error('Error connecting to MongoDB:', err);
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public/backend')));
 
-app.use(cors());
+// Configure CORS to allow credentials
+app.use(cors({
+  origin: true, // Allow all origins or specify your allowed origins
+  credentials: true
+}));
 app.use(cookieParser());
 
+// Configure session store
+const store = new ConnectMongodbSession({
+  uri: process.env.MONGODB_URL,
+  collection: 'sessions',
+  databaseName: process.env.DATABASE_NAME
+});
+
+store.on('error', (error) => {
+  console.error('Session store error:', error);
+});
+
+// Configure sessions
 app.use(
   session({
     saveUninitialized: false,
-    secret: 'sessionKey',
+    secret:'sessionKey',
     resave: false,
-    store: new ConnectMongodbSession({
-      uri: process.env.MONGODB_URL,
-      collection: 'session',
-      databaseName: process.env.DATABASE_NAME
-    }),
+    store: store,
     cookie: {
-      maxAge: 1000 * 60 * 24 * 10
+      maxAge: 1000 * 60 * 24 * 10,
+      sameSite: 'lax', // Adjust based on your needs ('strict', 'lax', 'none')
+      secure: process.env.NODE_ENV === 'production' // Ensure cookies are only sent over HTTPS in production
     }
   })
 );
@@ -51,5 +70,5 @@ app.use('/admin', adminRoutes);
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Dev server running on port: ${PORT}`);
+  console.log(`Server running on port: ${PORT}`);
 });

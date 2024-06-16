@@ -4,11 +4,15 @@ module.exports = {
       if (req.session.admin) {
         next();
       } else {
-        res.status(401).json({ error: 'Unauthorized' });
+        throw new Error('Unauthorized');
       }
     } catch (error) {
       console.error('Error in adminAuth middleware:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      if (error.message === 'Unauthorized') {
+        res.status(401).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     }
   },
 
@@ -17,14 +21,15 @@ module.exports = {
       if (req.session.user) {
         next();
       } else {
-        console.error('User not authenticated or missing _id');
-        res.status(401).json({ error: 'Unauthorized' });
+        throw new Error('Unauthorized');
       }
     } catch (error) {
       console.error('Error in userAuth middleware:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      if (error.message === 'Unauthorized') {
+        res.status(401).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
     }
   },
 };
-
-  

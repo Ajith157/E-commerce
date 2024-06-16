@@ -14,13 +14,13 @@ router.post('/login',adminController.postLogin)
 router.post('/logout',adminController.getLogout)
 
 // Route handler for retrieving the list of users (admin access required).
-router.get('/userlist',auth.adminAuth, adminController.getUserList);
+router.get('/userlist', adminController.getUserList);
 
 //Route handler for rendering the add product page (admin access required).
-router.get('/addproducts',auth.adminAuth,adminController.getAddproduct)
+router.get('/addproducts',adminController.getAddproduct)
 
 //Route handler for adding a new product (admin access required).
-router.post('/addproducts',auth.adminAuth, multer.uploads, adminController.postAddproduct)
+router.post('/addproducts', multer.uploads, adminController.postAddproduct)
 
 //Route handler for rendering the product edit page (admin access required).
 router.get('/editproduct/:id',auth.adminAuth,adminController.getEditproduct)

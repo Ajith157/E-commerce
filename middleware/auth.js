@@ -1,6 +1,6 @@
 module.exports = {
   adminAuth: (req, res, next) => {
-    if (req.sessions.admin) {
+    if (req.session.admin) {
       next();
     } else {
       res.status(401).json({ error: 'Unauthorized' });
@@ -9,7 +9,7 @@ module.exports = {
 
   userAuth: (req, res, next) => {
      
-    if (req.sessions.user) {
+    if (req.session.user) {
       next();
     } else {
       console.error('User not authenticated or missing _id');

@@ -27,7 +27,9 @@ const postLogin = (req, res) => {
     let data = req.body;
     adminHelper.doLogin(data).then((response) => {
         if (response) {
+            console.log(response,'rrrrrrrrrrr');
             req.session.admin = response;
+         
             res.status(200).json({ message: 'Login successfully' });
         } else {
             console.error("Error in login :");

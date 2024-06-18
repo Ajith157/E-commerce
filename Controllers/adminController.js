@@ -55,7 +55,7 @@ const getLogout = (req, res) => {
 const getUserList = async (req, res) => {
     
     try {
-        const admin = req.session.admin;
+        // const admin = req.session.admin;
       
 
         const userData = await adminHelper.getAllUsers();
@@ -69,16 +69,21 @@ const getUserList = async (req, res) => {
 
 //Handles the GET request to render the add product page.
 
-const getAddproduct = (req, res) => {
-    const admin = req.session.admin;
+const getAddproduct=(req,res)=>{
+    
+    res.send({message:"add product page rendered"})
+}
+
+// const getAddproduct = (req, res) => {
+//     const admin = req.session.admin;
    
 
-    if (admin) {
-        res.json({ admin });
-    } else {
-        res.status(401).json({ message: 'Unauthorized' });
-    }
-};
+//     if (admin) {
+//         res.json({ admin });
+//     } else {
+//         res.status(401).json({ message: 'Unauthorized' });
+//     }
+// };
 
 //Handles the POST request to add a new product.
 
@@ -114,7 +119,7 @@ const postAddproduct = async (req, res) => {
 
 
 const getEditproduct = (req, res) => {
-    const admin = req.session.admin;
+    // const admin = req.session.admin;
     const proId = req.params.id;
 
      

@@ -29,31 +29,31 @@ router.get('/editproduct/:id',adminController.getEditproduct)
 router.post('/editproduct/:id', multer.editeduploads, adminController.postEditProduct);
 
 //Route handler for fetching the list of products (admin access required).
-router.get('/productlist',auth.adminAuth,adminController.getProductList)
+router.get('/productlist',adminController.getProductList)
 
 //Route handler for deleting a product (admin access required).
-router.delete('/deleteproduct/:id',auth.adminAuth,adminController.deleteProduct)
+router.delete('/deleteproduct/:id',adminController.deleteProduct)
 
 //Route handler for rendering the page to add a new category (admin access required).
-router.get('/addcategory',auth.adminAuth,adminController.getAddcategory)
+router.get('/addcategory',adminController.getAddcategory)
 
 //Route handler for adding a new category (admin access required).
-router.post('/addcategory',auth.adminAuth,adminController.postAddcategory)
+router.post('/addcategory',adminController.postAddcategory)
 
 //Route handler for getting the edit category page (admin access required).
-router.get('/edit-category/:id',auth.adminAuth, adminController.getEditcategory)
+router.get('/edit-category/:id', adminController.getEditcategory)
 
 //Route handler for edit category (admin access required)
-router.patch('/edit-category/:id',auth.adminAuth, adminController.postEditcategory);
+router.patch('/edit-category/:id', adminController.postEditcategory);
 
 //Route handling for delete category (admin access required)
-router.delete('/delete-category/:id',auth.adminAuth,adminController.deleteCategory)
+router.delete('/delete-category/:id',adminController.deleteCategory)
 
 //Route handling for fetching order list (admin access required)
-router.get('/order-list/:id',auth.adminAuth,adminController.getOrderList)
+router.get('/order-list/:id',adminController.getOrderList)
 
 //Route handling  for fetching order details (admin access required)
-router.route('/order-details').get(auth.adminAuth, adminController.getOrderDetails);
+router.route('/order-details').get(adminController.getOrderDetails);
 
 
 

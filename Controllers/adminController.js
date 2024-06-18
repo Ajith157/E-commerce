@@ -175,9 +175,9 @@ const getEditproduct = (req, res) => {
 const getProductList = async (req, res) => {
     try {
 
-        if (!req.session || !req.session.admin) {
-            return res.status(401).json({ error: 'Unauthorized admin' });
-        }
+        // if (!req.session || !req.session.admin) {
+        //     return res.status(401).json({ error: 'Unauthorized admin' });
+        // }
 
         const products = await ProductModel.find();
         res.json(products);
@@ -204,7 +204,7 @@ const deleteProduct = (req, res) => {
 //Handles the GET request to retrieve categories for adding a new category.
 
 const getAddcategory=async(req,res)=>{
-    const admin=req.session.admin;
+    // const admin=req.session.admin;
     const categories=await CategoryModel.find()
 
     res.json(categories)
@@ -272,7 +272,7 @@ const deleteCategory = async (req, res) => {
 const getOrderList = async (req, res) => {
     try {
       const userId = req.params.id;
-      const admin = req.session.admin;
+    //   const admin = req.session.admin;
 
       
       if (!userId) {
@@ -297,7 +297,7 @@ const getOrderList = async (req, res) => {
         return res.status(404).json({ error: 'No orders found for this user' });
       }
   
-      res.json({ user, userId, admin, orders});
+      res.json({ user, userId, orders});
     } catch (error) {
       console.error('Unexpected error:', error);
       res.status(500).json({ error: 'An unexpected error occurred' });
@@ -308,7 +308,7 @@ const getOrderList = async (req, res) => {
 
 const getOrderDetails= async (req, res) => {
     try {
-        let admin = req.session.admin;
+        // let admin = req.session.admin;
        
         let orderId = req.query.orderId
       
@@ -335,7 +335,7 @@ const getOrderDetails= async (req, res) => {
      
 
         res.json({
-            admin,
+            
             userDetails,
             address,
             product,

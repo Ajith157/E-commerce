@@ -17,6 +17,7 @@ const addToCart = (req, res) => {
   }
 };
 
+
 //Handles the GET request to retrieve cart data.
 
 const getCart = async (req, res) => {

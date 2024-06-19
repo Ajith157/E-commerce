@@ -1,6 +1,7 @@
 const express =require("express");
 const router=express.Router();
 const adminController=require('../Controllers/adminController')
+const orderController=require('../Controllers/orderController.js')
 const multer=require('../multer/multer')
 const auth=require('../middleware/auth.js')
 
@@ -14,46 +15,49 @@ router.post('/login',adminController.postLogin)
 router.post('/logout',adminController.getLogout)
 
 // Route handler for retrieving the list of users (admin access required).
-router.get('/userlist', adminController.getUserList);
+router.get('/userlist', auth.adminAuth,adminController.getUserList);
 
 //Route handler for rendering the add product page (admin access required).
-router.get('/addproducts',adminController.getAddproduct)
+router.get('/addproducts',auth.adminAuth,adminController.getAddproduct)
 
 //Route handler for adding a new product (admin access required).
-router.post('/addproducts', multer.uploads, adminController.postAddproduct)
+router.post('/addproducts', auth.adminAuth,multer.uploads, adminController.postAddproduct)
 
 //Route handler for rendering the product edit page (admin access required).
-router.get('/editproduct/:id',adminController.getEditproduct)
+router.get('/editproduct/:id',auth.adminAuth,adminController.getEditproduct)
 
 //Route handler for handling the submission of product edit page (admin access required).
-router.post('/editproduct/:id', multer.editeduploads, adminController.postEditProduct);
+router.post('/editproduct/:id',auth.adminAuth, multer.editeduploads, adminController.postEditProduct);
 
 //Route handler for fetching the list of products (admin access required).
-router.get('/productlist',adminController.getProductList)
+router.get('/productlist',auth.adminAuth,adminController.getProductList)
 
 //Route handler for deleting a product (admin access required).
-router.delete('/deleteproduct/:id',adminController.deleteProduct)
+router.delete('/deleteproduct/:id',auth.adminAuth,adminController.deleteProduct)
 
 //Route handler for rendering the page to add a new category (admin access required).
-router.get('/addcategory',adminController.getAddcategory)
+router.get('/addcategory',auth.adminAuth,adminController.getAddcategory)
 
 //Route handler for adding a new category (admin access required).
-router.post('/addcategory',adminController.postAddcategory)
+router.post('/addcategory',auth.adminAuth,adminController.postAddcategory)
 
 //Route handler for getting the edit category page (admin access required).
-router.get('/edit-category/:id', adminController.getEditcategory)
+router.get('/edit-category/:id', auth.adminAuth,adminController.getEditcategory)
 
 //Route handler for edit category (admin access required)
-router.patch('/edit-category/:id', adminController.postEditcategory);
+router.patch('/edit-category/:id',auth.adminAuth, adminController.postEditcategory);
 
 //Route handling for delete category (admin access required)
-router.delete('/delete-category/:id',adminController.deleteCategory)
+router.delete('/delete-category/:id',auth.adminAuth,adminController.deleteCategory)
 
 //Route handling for fetching order list (admin access required)
-router.get('/order-list/:id',adminController.getOrderList)
+router.get('/order-list/:id',auth.adminAuth,adminController.getOrderList)
 
 //Route handling  for fetching order details (admin access required)
-router.route('/order-details').get(adminController.getOrderDetails);
+router.route('/order-details').get(auth.adminAuth,adminController.getOrderDetails);
+
+// CHANGE OEDER STATUS
+router.route('/change-order-status').post(auth.adminAuth, orderController.changeOrderStatus)
 
 
 

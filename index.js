@@ -54,7 +54,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 24 * 10,
       sameSite: 'lax', // Adjust based on your needs ('strict', 'lax', 'none')
-      secure: process.env.NODE_ENV === 'production' // Ensure cookies are only sent over HTTPS in production
+   
     }
   })
 );

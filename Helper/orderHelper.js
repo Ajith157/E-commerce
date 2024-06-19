@@ -1,153 +1,153 @@
 const express = require('express')
 const { ObjectId } = require('mongodb')
-const {cartModel,addressModel,orderModel,ProductModel,UserModel} = require('../models/Schema')
-const mongoose = require('mongoose'); 
-const Razorpay=require('razorpay')
+const { cartModel, addressModel, orderModel, ProductModel, UserModel } = require('../models/Schema')
+const mongoose = require('mongoose');
+const Razorpay = require('razorpay')
 
 const keyId = process.env.key_id
 const keySecret = process.env.key_secret
 
 var instance = new Razorpay({
-    key_id: "rzp_test_xztmEHhw6nGCRI",
-    key_secret: "aYOXpKbOXtjO5Yo2ggpZDwsw",
+  key_id: "rzp_test_xztmEHhw6nGCRI",
+  key_secret: "aYOXpKbOXtjO5Yo2ggpZDwsw",
 });
 //Calculates the total checkout amount for a user's cart.
 
-const totalCheckOutAmount= (userId) => {
-    return new Promise((resolve, reject) => {
-      cartModel.aggregate([
-        {
-          $match: { user: new ObjectId(userId) }
-        },
-        {
-          $unwind: "$cartItems"
-        },
-        {
-          $project: {
-            item: "$cartItems.productId",
-            quantity: "$cartItems.quantity"
-          }
-        },
-        {
-          $lookup: {
-            from: "products",
-            localField: "item",
-            foreignField: "_id",
-            as: "carted"
-          }
-        },
-        {
-          $project: {
-            item: 1,
-            quantity: 1,
-            product: { $arrayElemAt: ["$carted", 0] }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: { $multiply: ["$quantity", "$product.price"] } }
+const totalCheckOutAmount = (userId) => {
+  return new Promise((resolve, reject) => {
+    cartModel.aggregate([
+      {
+        $match: { user: new ObjectId(userId) }
+      },
+      {
+        $unwind: "$cartItems"
+      },
+      {
+        $project: {
+          item: "$cartItems.productId",
+          quantity: "$cartItems.quantity"
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "item",
+          foreignField: "_id",
+          as: "carted"
+        }
+      },
+      {
+        $project: {
+          item: 1,
+          quantity: 1,
+          product: { $arrayElemAt: ["$carted", 0] }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $multiply: ["$quantity", "$product.price"] } }
+        }
+      }
+    ]).then((total) => {
+      resolve({ total: total[0]?.total });
+    }).catch(error => {
+      reject({ message: error.message });
+    });
+  });
+};
+
+//Calculates the subtotal for the items in the user's cart.
+
+const getSubTotal = (userId) => {
+  return new Promise((resolve, reject) => {
+    cartModel.aggregate([
+      {
+        $match: { user: new ObjectId(userId) }
+      },
+      {
+        $unwind: "$cartItems"
+      },
+      {
+        $project: {
+          item: "$cartItems.productId",
+          quantity: "$cartItems.quantity"
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "item",
+          foreignField: "_id",
+          as: "carted"
+        }
+      },
+      {
+        $project: {
+          item: 1,
+          quantity: 1,
+          price: {
+            $arrayElemAt: ["$carted.price", 0]
           }
         }
-      ]).then((total) => {
-        resolve({ total: total[0]?.total });
-      }).catch(error => {
-        reject({ message: error.message });
-      });
-    });
-  };
-
-  //Calculates the subtotal for the items in the user's cart.
-
-  const getSubTotal= (userId) => {
-    return new Promise((resolve, reject) => {
-      cartModel.aggregate([
-        {
-          $match: { user: new ObjectId(userId) }
-        },
-        {
-          $unwind: "$cartItems"
-        },
-        {
-          $project: {
-            item: "$cartItems.productId",
-            quantity: "$cartItems.quantity"
-          }
-        },
-        {
-          $lookup: {
-            from: "products",
-            localField: "item",
-            foreignField: "_id",
-            as: "carted"
-          }
-        },
-        {
-          $project: {
-            item: 1,
-            quantity: 1,
-            price: {
-              $arrayElemAt: ["$carted.price", 0]
-            }
-          }
-        },
-        {
-          $project: {
-            total: { $multiply: ["$quantity", "$price"] }
-          }
+      },
+      {
+        $project: {
+          total: { $multiply: ["$quantity", "$price"] }
         }
-      ]).then((total) => {
-        const totals = total.map(obj => obj.total);
-        resolve({ total: total, totals: totals });
-      }).catch(error => {
-        reject({ message: error.message });
-      });
+      }
+    ]).then((total) => {
+      const totals = total.map(obj => obj.total);
+      resolve({ total: total, totals: totals });
+    }).catch(error => {
+      reject({ message: error.message });
     });
-  };
+  });
+};
 
-  // Saves or updates the user's address information.
+// Saves or updates the user's address information.
 
-  const postAddress= (data, userId) => {
-    return new Promise((resolve, reject) => {
-        try {
-            let addressInfo = {
-                fname: data.fname,
-                lname: data.lname,
-                street: data.street,
-                appartment: data.appartment,
-                city: data.city,
-                state: data.state,
-                zipcode: data.zipcode,
-                phone: data.phone,
-                email: data.email
+const postAddress = (data, userId) => {
+  return new Promise((resolve, reject) => {
+    try {
+      let addressInfo = {
+        fname: data.fname,
+        lname: data.lname,
+        street: data.street,
+        appartment: data.appartment,
+        city: data.city,
+        state: data.state,
+        zipcode: data.zipcode,
+        phone: data.phone,
+        email: data.email
+      }
+      addressModel.findOne({ user: userId }).then(async (ifAddress) => {
+        if (ifAddress) {
+          addressModel.updateOne(
+            { user: userId },
+            {
+              $push: { Address: addressInfo }
             }
-            addressModel.findOne({ user: userId }).then(async (ifAddress) => {
-                if (ifAddress) {
-                    addressModel.updateOne(
-                        { user: userId },
-                        {
-                            $push: { Address: addressInfo }
-                        }
-                    ).then((response) => {
-                        resolve(response)
-                    }).catch((error) => {
-                        reject({ message: error.message });
-                    });
-                } else {
-                    let newAddress = addressModel({ user: userId, Address: addressInfo });
-                    await newAddress.save().then((response) => {
-                        resolve(response)
-                    }).catch((error) => {
-                        reject({ message: error.message });
-                    });
-                }
-            }).catch((error) => {
-                reject({ message: error.message });
-            });
-        } catch (error) {
+          ).then((response) => {
+            resolve(response)
+          }).catch((error) => {
             reject({ message: error.message });
+          });
+        } else {
+          let newAddress = addressModel({ user: userId, Address: addressInfo });
+          await newAddress.save().then((response) => {
+            resolve(response)
+          }).catch((error) => {
+            reject({ message: error.message });
+          });
         }
-    });
+      }).catch((error) => {
+        reject({ message: error.message });
+      });
+    } catch (error) {
+      reject({ message: error.message });
+    }
+  });
 };
 
 //Retrieves the details of the specified address for a user.
@@ -155,34 +155,34 @@ const totalCheckOutAmount= (userId) => {
 const getEditAddress = (addressId, userId) => {
 
   return new Promise((resolve, reject) => {
-      addressModel.aggregate([
-          {
-              $match: {
-                  user: new ObjectId(userId)
-              }
-          },
-          {
-              $project: {
-                  address: {
-                      $filter: {
-                          input: "$Address",
-                          as: "item",
-                          cond: { $eq: ["$$item._id", new ObjectId(addressId)] }
-                      }
-                  }
-              }
+    addressModel.aggregate([
+      {
+        $match: {
+          user: new ObjectId(userId)
+        }
+      },
+      {
+        $project: {
+          address: {
+            $filter: {
+              input: "$Address",
+              as: "item",
+              cond: { $eq: ["$$item._id", new ObjectId(addressId)] }
+            }
           }
-      ])
+        }
+      }
+    ])
       .then(result => {
-        
-          if (result.length === 0) {
-              resolve(null); 
-          } else {
-              resolve(result[0].address[0]); 
-          }
+
+        if (result.length === 0) {
+          resolve(null);
+        } else {
+          resolve(result[0].address[0]);
+        }
       })
       .catch(error => {
-          reject(error);
+        reject(error);
       });
   });
 };
@@ -191,22 +191,22 @@ const getEditAddress = (addressId, userId) => {
 
 const patchEditAddress = (userId, addressId, userData) => {
   return new Promise(async (resolve, reject) => {
-      try {
-          const response = await addressModel.updateOne(
-              {
-                  user: new ObjectId(userId),
-                  "Address._id": new ObjectId(addressId),
-              },
-              {
-                  $set: {
-                      "Address.$": userData,
-                  },
-              }
-          );
-          resolve(response);
-      } catch (error) {
-          reject(error);
-      }
+    try {
+      const response = await addressModel.updateOne(
+        {
+          user: new ObjectId(userId),
+          "Address._id": new ObjectId(addressId),
+        },
+        {
+          $set: {
+            "Address.$": userData,
+          },
+        }
+      );
+      resolve(response);
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
@@ -214,28 +214,28 @@ const patchEditAddress = (userId, addressId, userData) => {
 
 const deleteAddress = (userId, addressId) => {
   return new Promise((resolve, reject) => {
-      addressModel.updateOne(
-          { user: new ObjectId(userId) },
-          { $pull: { Address: { _id: new ObjectId(addressId) } } }
-      )
+    addressModel.updateOne(
+      { user: new ObjectId(userId) },
+      { $pull: { Address: { _id: new ObjectId(addressId) } } }
+    )
       .then((response) => {
-          resolve(response);
+        resolve(response);
       })
       .catch((error) => {
-          reject(error);
+        reject(error);
       });
   });
 };
 
 //Retrieves the address of the specified user.
 
-const getAddress= (userId) => {
+const getAddress = (userId) => {
 
   return new Promise((resolve, reject) => {
-      addressModel.findOne({ user: userId }).then((response) => {
+    addressModel.findOne({ user: userId }).then((response) => {
 
-          resolve(response)
-      })
+      resolve(response)
+    })
   })
 };
 
@@ -245,12 +245,10 @@ const getAddress= (userId) => {
 
 const placeOrder = async (data) => {
   try {
-    // Debug log for input data
     console.log("Input data:", data);
 
-    // Fetch product details from the cart
     const productDetails = await cartModel.aggregate([
-      { $match: { user: new ObjectId(data.user) } },
+      { $match: { user: new mongoose.Types.ObjectId(data.user) } },
       { $unwind: '$cartItems' },
       {
         $project: {
@@ -280,31 +278,25 @@ const placeOrder = async (data) => {
       },
     ]);
 
-    // Debug log for product details
     console.log("Product details:", productDetails);
 
-    // Check if product details are available
     if (!productDetails.length) {
       throw new Error("No products found in the cart for the given user.");
     }
 
-    // Fetch user address
     const address = await addressModel.aggregate([
-      { $match: { user: new ObjectId(data.user) } },
+      { $match: { user: new mongoose.Types.ObjectId(data.user) } },
       { $unwind: "$Address" },
-      { $match: { "Address._id": new ObjectId(data.address) } },
+      { $match: { "Address._id": new mongoose.Types.ObjectId(data.address) } },
       { $project: { item: "$Address" } },
     ]);
 
-    // Debug log for address details
     console.log("Address details:", address);
 
-    // Check if address is available
     if (!address.length) {
       throw new Error("Address not found for the given user and address ID.");
     }
 
-    // Determine order status based on payment option
     let status, orderStatus;
     if (data.payment_option === "COD") {
       status = "Placed";
@@ -314,7 +306,6 @@ const placeOrder = async (data) => {
       orderStatus = "Pending";
     }
 
-    // Prepare order data
     const orderData = {
       name: address[0].item.fname,
       paymentStatus: status,
@@ -322,10 +313,11 @@ const placeOrder = async (data) => {
       productDetails: productDetails,
       shippingAddress: address[0].item,
       orderStatus: orderStatus,
-      totalPrice: data.totalAmount, // Assuming totalAmount is the original price without discounts
+      totalPrice: data.totalAmount,
     };
-            console.log(orderData,'22222222222');
-    // Check if order already exists for the user
+
+
+
     const existingOrder = await orderModel.findOne({ user: data.user });
 
     if (existingOrder) {
@@ -341,12 +333,10 @@ const placeOrder = async (data) => {
       await newOrder.save();
     }
 
-    // Remove the user's cart after placing the order
     await cartModel.deleteMany({ user: data.user });
 
     return { message: 'Order placed successfully' };
   } catch (error) {
-    // Improved error handling with more context
     console.error("Error in placeOrder function:", error);
     throw new Error(error.message);
   }
@@ -363,10 +353,10 @@ const getCartCount = (userId) => {
       if (cart) {
         resolve(cart.cartItems.length);
       } else {
-        resolve(0); 
+        resolve(0);
       }
     }).catch((err) => {
-      reject(err); 
+      reject(err);
     });
   });
 };
@@ -382,7 +372,7 @@ const getOrders = (userId) => {
           resolve({ success: true, user: null, orders: [] });
           return;
         }
-        resolve({ success: true, user, orders: user.orders }); 
+        resolve({ success: true, user, orders: user.orders });
       }).catch((error) => {
         reject({ error: "Database error", details: error.message });
       });
@@ -394,33 +384,33 @@ const getOrders = (userId) => {
 
 //Retrieves the shipping address for a specific order of a user.
 
-const getOrderAddress= (userId, orderId) => {
+const getOrderAddress = (userId, orderId) => {
   return new Promise((resolve, reject) => {
-      orderModel.aggregate([
-          {
-              $match: {
-                  "user": new ObjectId(userId)
-              }
-          },
-          {
-              $unwind: "$orders"
-          },
-          {
-              $match: {
-                  "orders._id": new ObjectId(orderId)
-              }
-          },
-          {
-              $unwind: "$orders.shippingAddress"
-          },
-          {
-              $project: {
-                  "shippingAddress": "$orders.shippingAddress"
-              }
-          }
-      ]).then((address) => {
-          resolve(address)
-      })
+    orderModel.aggregate([
+      {
+        $match: {
+          "user": new ObjectId(userId)
+        }
+      },
+      {
+        $unwind: "$orders"
+      },
+      {
+        $match: {
+          "orders._id": new ObjectId(orderId)
+        }
+      },
+      {
+        $unwind: "$orders.shippingAddress"
+      },
+      {
+        $project: {
+          "shippingAddress": "$orders.shippingAddress"
+        }
+      }
+    ]).then((address) => {
+      resolve(address)
+    })
 
   })
 }
@@ -447,12 +437,12 @@ const getSubOrders = (orderId, userId) => {
           }
         }
       ])
-      .then(order => {
-        resolve(order);
-      })
-      .catch(error => {
-        reject(error);
-      });
+        .then(order => {
+          resolve(order);
+        })
+        .catch(error => {
+          reject(error);
+        });
     } catch (error) {
       reject(error);
     }
@@ -461,80 +451,80 @@ const getSubOrders = (orderId, userId) => {
 
 //Retrieves ordered products for a specific order of a user.
 
-const getOrderedProducts= (orderId, userId) => {
+const getOrderedProducts = (orderId, userId) => {
   return new Promise((resolve, reject) => {
-      try {
-          orderModel.aggregate([
-              {
-                  $match: {
-                      "user": new ObjectId(userId)
-                  }
-              },
-              {
-                  $unwind: "$orders"
-              },
-              {
-                  $match: {
-                      "orders._id": new ObjectId(orderId)
-                  }
-              },
-              {
-                  $unwind: "$orders.productDetails"
-              },
-              {
-                  $project: {
-                      "productDetails": "$orders.productDetails"
-                  }
-              }
-          ]).then((response) => {
-              resolve(response);
-          }).catch((error) => {
-              reject(error);
-          });
-      } catch (error) {
-          reject(error);
-      }
+    try {
+      orderModel.aggregate([
+        {
+          $match: {
+            "user": new ObjectId(userId)
+          }
+        },
+        {
+          $unwind: "$orders"
+        },
+        {
+          $match: {
+            "orders._id": new ObjectId(orderId)
+          }
+        },
+        {
+          $unwind: "$orders.productDetails"
+        },
+        {
+          $project: {
+            "productDetails": "$orders.productDetails"
+          }
+        }
+      ]).then((response) => {
+        resolve(response);
+      }).catch((error) => {
+        reject(error);
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
 //Retrieves the total price of products in a specific order of a user.
 
-const getTotal= (orderId, userId) => {
+const getTotal = (orderId, userId) => {
   return new Promise((resolve, reject) => {
-      try {
-          orderModel.aggregate([
-              {
-                  $match: {
-                      "user": new ObjectId(userId)
-                  }
-              },
-              {
-                  $unwind: "$orders"
-              },
-              {
-                  $match: {
-                      "orders._id": new ObjectId(orderId)
-                  }
-              },
-              {
-                  $unwind: "$orders.productDetails"
-              },
-              {
-                  $project: {
-                      "productDetails": "$orders.productDetails",
-                      "totalPrice": { $multiply: ["$orders.productDetails.productPrice", "$orders.productDetails.quantity"] }
-                  }
-              }
-          ])
-          .then((response) => {
-              resolve(response);
-          })
-          .catch((error) => {
-              reject(error);
-          });
-      } catch (error) {
+    try {
+      orderModel.aggregate([
+        {
+          $match: {
+            "user": new ObjectId(userId)
+          }
+        },
+        {
+          $unwind: "$orders"
+        },
+        {
+          $match: {
+            "orders._id": new ObjectId(orderId)
+          }
+        },
+        {
+          $unwind: "$orders.productDetails"
+        },
+        {
+          $project: {
+            "productDetails": "$orders.productDetails",
+            "totalPrice": { $multiply: ["$orders.productDetails.productPrice", "$orders.productDetails.quantity"] }
+          }
+        }
+      ])
+        .then((response) => {
+          resolve(response);
+        })
+        .catch((error) => {
           reject(error);
-      }
+        });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
@@ -542,107 +532,255 @@ const getTotal= (orderId, userId) => {
 
 const getOrderTotal = (orderId, userId) => {
   return new Promise((resolve, reject) => {
-      orderModel.aggregate([
-          {
-              $match: {
-                  "user": new ObjectId(userId)
-              }
-          },
-          {
-              $unwind: "$orders"
-          },
-          {
-              $match: {
-                  "orders._id": new ObjectId(orderId)
-              }
-          },
-          {
-              $unwind: "$orders.productDetails"
-          },
-          {
-              $group: {
-                  _id: "$orders._id",
-                  totalPrice: { $sum: "$orders.productDetails.productPrice" }
-              }
-          }
+    orderModel.aggregate([
+      {
+        $match: {
+          "user": new ObjectId(userId)
+        }
+      },
+      {
+        $unwind: "$orders"
+      },
+      {
+        $match: {
+          "orders._id": new ObjectId(orderId)
+        }
+      },
+      {
+        $unwind: "$orders.productDetails"
+      },
+      {
+        $group: {
+          _id: "$orders._id",
+          totalPrice: { $sum: "$orders.productDetails.productPrice" }
+        }
+      }
 
-      ]).then((response) => {
-          if (response && response.length > 0) {
-              const orderTotal = response[0].totalPrice;
-              resolve(orderTotal);
-          } else {
-              reject(new Error("Order not found or total price could not be calculated."));
+    ]).then((response) => {
+      if (response && response.length > 0) {
+        const orderTotal = response[0].totalPrice;
+        resolve(orderTotal);
+      } else {
+        reject(new Error("Order not found or total price could not be calculated."));
+      }
+    }).catch((error) => {
+      reject(error);
+    });
+  });
+};
+
+
+const generateRazorpay = async (userId, total) => {
+  try {
+    let orders = await orderModel.find({ user: userId });
+
+    if (orders.length === 0 || orders[0].orders.length === 0) {
+      throw new Error("No orders found for user.");
+    }
+
+    let order = orders[0].orders.slice().reverse();
+    let orderId = order[0]._id;
+
+    let options = {
+      amount: total * 100,
+      currency: "INR",
+      receipt: "" + orderId
+    };
+
+    return new Promise((resolve, reject) => {
+      instance.orders.create(options, (err, order) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(order);
+        }
+      });
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+// Helper function in orderHelper.js
+
+
+
+// Helper function in orderHelper.js
+
+const verifyPayment = (details) => {
+
+  return new Promise((resolve, reject) => {
+      const crypto = require("crypto");
+      const secret = "aYOXpKbOXtjO5Yo2ggpZDwsw"; // Your Razorpay secret key
+
+      const generatedSignature = crypto.createHmac("sha256", secret)
+          .update(details["payment[razorpay_order_id]"] + "|" + details["payment[razorpay_payment_id]"])
+          .digest("hex");
+
+      const actualSignature = details["payment[razorpay_signature]"];
+
+      if (generatedSignature === actualSignature) {
+          resolve(); // Resolve if verification is successful
+      } else {
+          reject(new Error("Payment verification failed")); // Reject if verification fails
+      }
+  });
+};
+
+
+const changePaymentStatus = (orderId) => {
+ 
+  return new Promise(async (resolve, reject) => {
+    try {
+      await orderModel.updateOne(
+        { "orders._id": orderId },
+        {
+          $set: {
+            "orders.$.orderConfirm": "Success",
+            "orders.$.paymentStatus": "Paid"
           }
+        }
+      );
+
+      await cartModel.deleteMany({ user: req.user.id });
+
+      resolve({ status: true, message: "Payment status updated and cart cleared successfully." });
+    } catch (error) {
+      reject({ status: false, message: error.message });
+    }
+  });
+};
+
+
+
+const changeOrderStatus = (orderId, status) => {
+  
+  return new Promise((resolve, reject) => {
+    try {
+      orderModel.updateOne(
+        { 'orders._id': orderId },
+        { $set: { 'orders.$.orderConfirm': status } }
+      ).then((response) => {
+        resolve({ success: true, message: 'Order status updated successfully', response });
       }).catch((error) => {
-          reject(error);
+        reject({ success: false, message: 'Failed to update order status', error });
+      });
+    } catch (error) {
+      reject({ success: false, message: 'Error occurred while updating order status', error: error.message });
+    }
+  });
+};
+
+
+const cancelOrder = (orderId) => {
+  return new Promise((resolve, reject) => {
+    orderModel.findOne({ 'orders._id': orderId })
+      .then((orderDoc) => {
+        if (!orderDoc) {
+          reject(new Error('Order not found'));
+          return;
+        }
+
+        let orderIndex = orderDoc.orders.findIndex(order => order._id.toString() === orderId.toString());
+        let order = orderDoc.orders[orderIndex];
+
+        if (!order) {
+          reject(new Error('Order details not found'));
+          return;
+        }
+
+        let updateQuery = {
+          $set: {
+            ['orders.' + orderIndex + '.orderConfirm']: 'Canceled'
+          }
+        };
+
+        if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'Pending' && order.paymentId) {
+          // Calculate refund amount (if needed)
+          let refundAmount = order.totalPrice * 100; // Amount in smallest currency unit (e.g., paisa in India)
+
+          // Initiate Razorpay refund
+          instance.payments.refund(order.paymentId, {
+            amount: refundAmount,
+            speed: 'optimum'
+          }).then((response) => {
+            // Handle Razorpay refund success
+            console.log('Razorpay refund response:', response);
+
+            // Update order status after successful refund
+            updateQuery.$set['orders.' + orderIndex + '.paymentStatus'] = 'Refunded';
+
+            orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
+              .then(() => {
+                resolve({ message: 'Order canceled and refunded' });
+              })
+              .catch((error) => {
+                reject(error);
+              });
+
+          }).catch((error) => {
+            // Handle Razorpay refund failure
+            console.error('Razorpay refund error:', error);
+            reject(error);
+          });
+
+        } else {
+          // Update order status without refund for other payment methods or statuses
+          orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
+            .then(() => {
+              resolve({ message: 'Order canceled' });
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        }
+
+      }).catch((error) => {
+        reject(error);
       });
   });
 };
 
 
-const generateRazorpay=(userId, total)=> {
-  return new Promise(async (resolve, reject) => {
-      try {
-          let orders = await orderModel.find({ user: userId });
 
-          if (orders.length === 0 || orders[0].orders.length === 0) {
-              return reject(new Error("No orders found for user."));
-          }
 
-          let order = orders[0].orders.slice().reverse();
-          let orderId = order[0]._id;
 
-          let  options = {
-              amount: total * 100,  // amount in the smallest currency unit
-              currency: "INR",
-              receipt: "" + orderId
-          };
 
-          instance.orders.create(options, function (err, order) {
-              if (err) {
-                  return reject(err);
-              } else {
-                  resolve(order);
-              }
-          });
-      } catch (error) {
-          reject(error);
-      }
-  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports = {
+  totalCheckOutAmount,
+  getSubTotal,
+  postAddress,
+  getEditAddress,
+  patchEditAddress,
+  deleteAddress,
+  getAddress,
+  placeOrder,
+  getCartCount,
+  getOrderAddress,
+  getOrders,
+  getSubOrders,
+  getOrderedProducts,
+  getTotal,
+  getOrderTotal,
+  generateRazorpay,
+  verifyPayment,
+  changePaymentStatus,
+  changeOrderStatus,
+  cancelOrder
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  module.exports={totalCheckOutAmount,
-    getSubTotal,
-    postAddress,
-    getEditAddress,
-    patchEditAddress,
-    deleteAddress,
-    getAddress,
-    placeOrder,
-    getCartCount,
-    getOrderAddress,
-    getOrders,
-    getSubOrders,
-    getOrderedProducts,
-    getTotal,
-    getOrderTotal,
-    generateRazorpay
-  }
-  

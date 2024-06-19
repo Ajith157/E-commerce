@@ -226,13 +226,27 @@ const getShop = async (req, res) => {
 
 //Retrieves details of a specific product.
 
+// const getProductdetails = (req, res) => {
+//   try {
+//     let proId = req.params.id;
+//     let user = req.session.user;
+
+//     userHelper.getProductDetail(proId).then((product) => {
+//       res.json({ product, user });
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 const getProductdetails = (req, res) => {
   try {
     let proId = req.params.id;
-    let user = req.session.user;
+   
 
     userHelper.getProductDetail(proId).then((product) => {
-      res.json({ product, user });
+      res.json({ product });
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

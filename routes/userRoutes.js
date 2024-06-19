@@ -34,10 +34,10 @@ router.post('/forgot-password',userController. forgotPassword);
 router.post('/reset/:token', userController.resetPassword);
 
 //Route handler for fetching product details (user access required)
-router.get('/product-details/:id',auth.userAuth, userController.getProductdetails)
+router.get('/product-details/:id', userController.getProductdetails)
 
 //Route handler for handling add to cart funtionality (use access required)
-router.post('/add-to-cart/:id',auth.userAuth, cartController.addToCart)
+router.post('/add-to-cart/:id', cartController.addToCart)
 
 //Route handler for fetching cart product list (user access required)
 router.get('/cart-list',auth.userAuth, cartController.getCart)
@@ -67,6 +67,8 @@ router.get('/check-out', auth.userAuth, orderController.getcheckOut);
 router.post('/check-out', auth.userAuth, orderController.postCheckout)
 
 
+router.route('/verify_payment').post(auth.userAuth, orderController.verifyPayment)
+
 
 //Route handler for get profile details (user access required)
 router.get('/get-profile',auth.userAuth,orderController.getProfile);
@@ -85,6 +87,9 @@ router.route('/change-user-data/:id').post(auth.userAuth, userController.changeU
 
 //Route handler for sorting products (user access required)
 router.get("/sort/:id", auth.userAuth, userController.sort)
+
+router.route('/cancel-order/').post(auth.userAuth, orderController.cancelOrder)
+
 
 
 

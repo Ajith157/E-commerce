@@ -99,31 +99,32 @@ const getcheckOut= async (req, res) => {
 
 //Handles the POST request to place an order.
 
-const postCheckout= async (req, res) => {
+const postCheckout = async (req, res) => {
     try {
         let userId = req.session.user._id;
         let data = req.body;
         let total = data.total;
-              
-      
+
         try {
             const response = await orderHelper.placeOrder(data);
 
             if (data.payment_option === "COD") {
-                res.json({ codStatus: true });
+                res.json({ codStatus: true, message: 'Order placed successfully with COD' });
             } else if (data.payment_option === "razorpay") {
                 const order = await orderHelper.generateRazorpay(userId, total);
+                
                 res.json(order);
             } else {
-                res.json({ orderStatus: true, message: 'order placed successfully' });
+                res.json({ orderStatus: true, message: 'Order placed successfully' });
             }
         } catch (error) {
-            res.json({ error: error.message });
+            res.status(500).json({ error: error.message });
         }
     } catch (error) {
-        res.json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
-}
+};
+
 
 //Handles the GET request to retrieve user profile data.
 
@@ -145,7 +146,72 @@ const getProfile= async (req, res) => {
         console.log('catch');
         res.status(500).json({ error: error.message });
     }
-}
+};
+
+const verifyPayment = (req, res) => {
+      console.log(req.body,'22222222');
+    orderHelper.verifyPayment(req.body)
+  
+        .then(() => {
+            return orderHelper.changePaymentStatus(req.body["order{receipt}"]);
+        })
+        .then(() => {
+            res.json({
+                status: true,
+                orderId: req.body["order[receipt]"],
+                addressId: req.body["order[notes][address]"], 
+            });
+        })
+        .catch((error) => {
+            
+            if (error instanceof Error) {
+                res.status(500).json({ error: error.message });
+            } else {
+             
+                res.status(500).json({ error: 'An error occurred.' });
+            }
+        });
+};
+
+
+const changeOrderStatus = async (req, res) => {
+    try {
+        let orderId = req.body.orderId;
+        let status = req.body.status;
+
+      
+        let response = await orderHelper.changeOrderStatus(orderId, status);
+
+     
+        res.send(response);
+    } catch (error) {
+   
+        console.error('Error occurred while changing order status:', error);
+        res.status(500).send({
+            success: false,
+            message: 'Failed to update order status',
+            error: error.message
+        });
+    }
+};
+
+const cancelOrder = (req, res) => {
+    let orderId = req.query.orderId; 
+    let total = parseInt(req.query.total);
+    let userId = req.session.user._id;
+  
+
+    orderHelper.cancelOrder(orderId)
+        .then((canceled) => {
+            res.send(canceled);
+        })
+        .catch((error) => {
+            res.status(500).send({ error: error.message });
+        });
+};
+
+
+
 
 
 
@@ -161,4 +227,7 @@ module.exports={postAddress,
     deleteAddress,
     getcheckOut,
     postCheckout,
-    getProfile}
+    getProfile,
+    verifyPayment,
+    changeOrderStatus,
+    cancelOrder}

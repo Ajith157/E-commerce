@@ -8,8 +8,8 @@ const keyId = process.env.key_id
 const keySecret = process.env.key_secret
 
 var instance = new Razorpay({
-  key_id: "rzp_test_xztmEHhw6nGCRI",
-  key_secret: "aYOXpKbOXtjO5Yo2ggpZDwsw",
+  key_id: "rzp_test_IostXCStKNvzBp",
+  key_secret: "9BK2QTC6UWC1QsV2YNmIuRAL",
 });
 //Calculates the total checkout amount for a user's cart.
 
@@ -575,6 +575,7 @@ const generateRazorpay = async (userId, total) => {
     let orders = await orderModel.find({ user: userId });
 
     if (orders.length === 0 || orders[0].orders.length === 0) {
+      
       throw new Error("No orders found for user.");
     }
 
@@ -602,17 +603,16 @@ const generateRazorpay = async (userId, total) => {
 };
 
 
-// Helper function in orderHelper.js
-
 
 
 // Helper function in orderHelper.js
 
 const verifyPayment = (details) => {
 
+
   return new Promise((resolve, reject) => {
       const crypto = require("crypto");
-      const secret = "aYOXpKbOXtjO5Yo2ggpZDwsw"; // Your Razorpay secret key
+      const secret = "9BK2QTC6UWC1QsV2YNmIuRAL"; 
 
       const generatedSignature = crypto.createHmac("sha256", secret)
           .update(details["payment[razorpay_order_id]"] + "|" + details["payment[razorpay_payment_id]"])
@@ -621,9 +621,9 @@ const verifyPayment = (details) => {
       const actualSignature = details["payment[razorpay_signature]"];
 
       if (generatedSignature === actualSignature) {
-          resolve(); // Resolve if verification is successful
+          resolve();
       } else {
-          reject(new Error("Payment verification failed")); // Reject if verification fails
+          reject(new Error("Payment verification failed")); 
       }
   });
 };
@@ -638,7 +638,8 @@ const changePaymentStatus = (orderId) => {
         {
           $set: {
             "orders.$.orderConfirm": "Success",
-            "orders.$.paymentStatus": "Paid"
+            "orders.$.paymentStatus": "Paid",
+            "orders.$.paymentId": paymentId
           }
         }
       );
@@ -655,7 +656,7 @@ const changePaymentStatus = (orderId) => {
 
 
 const changeOrderStatus = (orderId, status) => {
-  
+
   return new Promise((resolve, reject) => {
     try {
       orderModel.updateOne(
@@ -673,74 +674,209 @@ const changeOrderStatus = (orderId, status) => {
 };
 
 
-const cancelOrder = (orderId) => {
-  return new Promise((resolve, reject) => {
-    orderModel.findOne({ 'orders._id': orderId })
-      .then((orderDoc) => {
-        if (!orderDoc) {
-          reject(new Error('Order not found'));
-          return;
-        }
+// const cancelOrder = (orderId) => {
+//   return new Promise((resolve, reject) => {
+//     orderModel.findOne({ 'orders._id': orderId })
+//       .then((orderDoc) => {
+//         if (!orderDoc) {
+//           reject(new Error('Order not found'));
+//           return;
+//         }
 
-        let orderIndex = orderDoc.orders.findIndex(order => order._id.toString() === orderId.toString());
-        let order = orderDoc.orders[orderIndex];
+//         let orderIndex = orderDoc.orders.findIndex(order => order._id.toString() === orderId.toString());
+//         let order = orderDoc.orders[orderIndex];
 
-        if (!order) {
-          reject(new Error('Order details not found'));
-          return;
-        }
+//         if (!order) {
+//           reject(new Error('Order details not found'));
+//           return;
+//         }
 
-        let updateQuery = {
-          $set: {
-            ['orders.' + orderIndex + '.orderConfirm']: 'Canceled'
-          }
-        };
+//         let updateQuery = {
+//           $set: {
+//             ['orders.' + orderIndex + '.orderConfirm']: 'Canceled'
+//           }
+//         };
 
-        if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'Pending' && order.paymentId) {
-          // Calculate refund amount (if needed)
-          let refundAmount = order.totalPrice * 100; // Amount in smallest currency unit (e.g., paisa in India)
+//         if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'Pending' && order.paymentId) {
+//           // Calculate refund amount (if needed)
+//           let refundAmount = order.totalPrice * 100; // Amount in smallest currency unit (e.g., paisa in India)
 
-          // Initiate Razorpay refund
-          instance.payments.refund(order.paymentId, {
-            amount: refundAmount,
-            speed: 'optimum'
-          }).then((response) => {
-            // Handle Razorpay refund success
-            console.log('Razorpay refund response:', response);
+//           // Initiate Razorpay refund
+//           instance.payments.refund(order.paymentId, {
+//             amount: refundAmount,
+//             speed: 'optimum'
+//           }).then((response) => {
+//             // Handle Razorpay refund success
+//             console.log('Razorpay refund response:', response);
 
-            // Update order status after successful refund
-            updateQuery.$set['orders.' + orderIndex + '.paymentStatus'] = 'Refunded';
+//             // Update order status after successful refund
+//             updateQuery.$set['orders.' + orderIndex + '.paymentStatus'] = 'Refunded';
 
-            orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
-              .then(() => {
-                resolve({ message: 'Order canceled and refunded' });
-              })
-              .catch((error) => {
-                reject(error);
-              });
+//             orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
+//               .then(() => {
+//                 resolve({ message: 'Order canceled and refunded' });
+//               })
+//               .catch((error) => {
+//                 reject(error);
+//               });
 
-          }).catch((error) => {
-            // Handle Razorpay refund failure
-            console.error('Razorpay refund error:', error);
-            reject(error);
+//           }).catch((error) => {
+//             // Handle Razorpay refund failure
+//             console.error('Razorpay refund error:', error);
+//             reject(error);
+//           });
+
+//         } else {
+//           // Update order status without refund for other payment methods or statuses
+//           orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
+//             .then(() => {
+//               resolve({ message: 'Order canceled' });
+//             })
+//             .catch((error) => {
+//               reject(error);
+//             });
+//         }
+
+//       }).catch((error) => {
+//         reject(error);
+//       });
+//   });
+// };
+
+const cancelOrder= (orderId) => {
+  try {
+      return new Promise((resolve, reject) => {
+          orderModel.find({ 'orders._id': orderId }).then((orders) => {
+              let orderIndex = orders[0].orders.findIndex((orders) => orders._id == orderId);
+              let order = orders[0].orders.find((order) => order._id == orderId);
+
+              if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'Paid') {
+                  // Fetch payment details from Razorpay API
+                  instance.payments.fetch(order.paymentId).then((payment) => {
+                      if (payment.status === 'captured') {
+                          // Initiate refund using the payment ID and refund amount
+                          instance.payments.refund(order.paymentId, { amount: order.totalPrice * 100 }).then((refund) => {
+                              // Update order status in the database
+                              orderModel.updateOne(
+                                  { 'orders._id': orderId },
+                                  {
+                                      $set: {
+                                          ['orders.' + orderIndex + '.orderConfirm']: 'Canceled by User',
+                                          ['orders.' + orderIndex + '.paymentStatus']: 'Refunded'
+                                      }
+                                  }
+                              ).then((orders) => {
+                                  resolve(orders)
+                              });
+                          }).catch((error) => {
+                              console.log(error);
+                              reject(error);
+                          });
+                      } else {
+                          console.log('Payment not captured');
+                          reject('Payment not captured');
+                      }
+                  }).catch((error) => {
+                      console.log(error);
+                      reject(error);
+                  });
+              } else if (order.paymentMethod === 'COD' && order.orderConfirm === 'Delivered' && order.paymentStatus === 'paid') {
+                  // Update order status in the database
+                  orderModel.updateOne(
+                      { 'orders._id': orderId },
+                      {
+                          $set: {
+                              ['orders.' + orderIndex + '.orderConfirm']: 'Canceled',
+                              ['orders.' + orderIndex + '.paymentStatus']: 'Refunded'
+                          }
+                      }
+                  ).then((orders) => {
+                      resolve(orders)
+                  });
+              } else {
+                  // Update order status in the database
+                  orderModel.updateOne(
+                      { 'orders._id': orderId },
+                      {
+                          $set: {
+                              ['orders.' + orderIndex + '.orderConfirm']: 'Canceled'
+                          }
+                      }
+                  ).then((orders) => {
+                      resolve(orders)
+                  });
+              }
           });
+      });
+  } catch (error) {
+      console.log(error.message);
+  }
+};
 
-        } else {
-          // Update order status without refund for other payment methods or statuses
-          orderModel.updateOne({ 'orders._id': orderId }, updateQuery)
-            .then(() => {
-              resolve({ message: 'Order canceled' });
-            })
-            .catch((error) => {
-              reject(error);
-            });
-        }
+const returnOrder = (orderId, userId, returnReason) => {
+  console.log(orderId, userId, returnReason,'5555555');
+  return new Promise((resolve, reject) => {
+      orderModel.find({ 'orders._id': orderId }).then((orders) => {
+          let orderIndex = orders[0].orders.findIndex(
+              (orders) => orders._id == orderId
+          );
+          let order = orders[0].orders.find((order) => order._id == orderId);
 
+          if (order.paymentMethod === 'razorpay' && order.paymentStatus === 'Paid') {
+              // Fetch payment details from Razorpay API
+              instance.payments.fetch(order.paymentId).then((payment) => {
+                  if (payment.status === 'captured') {
+                      // Initiate refund using the payment ID and refund amount
+                      instance.payments.refund(order.paymentId, { amount: order.totalPrice * 100 }).then((refund) => {
+                          // Update order status in the database
+                          orderModel.updateOne(
+                              { 'orders._id': orderId },
+                              {
+                                  $set: {
+                                      ['orders.' + orderIndex + '.orderConfirm']: 'Returned',
+                                      ['orders.' + orderIndex + '.paymentStatus']: 'Refunded',
+                                      ['orders.' + orderIndex + '.returnReason']: returnReason 
+                                  }
+                              }
+                          ).then((orders) => {
+                              resolve({ message: 'Product returned successfully', orders });
+                          }).catch((error) => {
+                              reject(new Error('Failed to update order status'));
+                          });
+                      }).catch((error) => {
+                          reject(new Error('Failed to process refund'));
+                      });
+                  } else {
+                      reject(new Error('Payment not captured'));
+                  }
+              }).catch((error) => {
+                  reject(new Error('Failed to fetch payment details'));
+              });
+          } else if (order.paymentMethod === 'COD') {
+              // Update order status in the database
+              orderModel.updateOne(
+                  { 'orders._id': orderId },
+                  {
+                      $set: {
+                          ['orders.' + orderIndex + '.orderConfirm']: 'Returned',
+                          ['orders.' + orderIndex + '.paymentStatus']: 'Refunded',
+                          ['orders.' + orderIndex + '.returnReason']: returnReason // Save the return reason
+                      }
+                  }
+              ).then((orders) => {
+                  resolve({ message: 'Product returned successfully', orders });
+              }).catch((error) => {
+                  reject(new Error('Failed to update order status'));
+              });
+          } else {
+              reject(new Error('Invalid payment method'));
+          }
       }).catch((error) => {
-        reject(error);
+          reject(new Error('Failed to find order'));
       });
   });
-};
+}
+
 
 
 
@@ -782,5 +918,6 @@ module.exports = {
   verifyPayment,
   changePaymentStatus,
   changeOrderStatus,
-  cancelOrder
+  cancelOrder,
+  returnOrder
 }

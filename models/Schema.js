@@ -72,7 +72,8 @@ const orderSchema = new Schema({
         paymentMethod: { type: String },
         status: { type: Boolean, default: true },
         paymentType: { type: String },
-        orderConfirm: { type: String, default: "ordered" }
+        orderConfirm: { type: String, default: "ordered" },
+        returnReason: {type:String}
     }]
 }, { timestamps: true });
 

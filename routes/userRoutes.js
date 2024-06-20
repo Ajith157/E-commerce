@@ -88,7 +88,10 @@ router.route('/change-user-data/:id').post(auth.userAuth, userController.changeU
 //Route handler for sorting products (user access required)
 router.get("/sort/:id", auth.userAuth, userController.sort)
 
-router.route('/cancel-order/').post(auth.userAuth, orderController.cancelOrder)
+router.route('/cancel-order/').post( orderController.cancelOrder)
+
+router.route('/return-order/').post(orderController.returnOrder)
+
 
 
 

@@ -53,7 +53,7 @@ app.use(
     store: store,
     cookie: {
       maxAge: 1000 * 60 * 24 * 10,
-      sameSite: 'lax', // Adjust based on your needs ('strict', 'lax', 'none')
+      sameSite: 'lax', 
    
     }
   })

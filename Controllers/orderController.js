@@ -149,11 +149,11 @@ const getProfile= async (req, res) => {
 };
 
 const verifyPayment = (req, res) => {
-      console.log(req.body,'22222222');
+    
     orderHelper.verifyPayment(req.body)
   
         .then(() => {
-            return orderHelper.changePaymentStatus(req.body["order{receipt}"]);
+            return orderHelper.changePaymentStatus(req.body["order[receipt]"]);
         })
         .then(() => {
             res.json({
@@ -195,20 +195,35 @@ const changeOrderStatus = async (req, res) => {
     }
 };
 
-const cancelOrder = (req, res) => {
-    let orderId = req.query.orderId; 
-    let total = parseInt(req.query.total);
+const cancelOrder= (req, res) => {
+    let orderId = req.query.id;
+    let total = req.query.total;
     let userId = req.session.user._id;
   
 
-    orderHelper.cancelOrder(orderId)
-        .then((canceled) => {
-            res.send(canceled);
-        })
-        .catch((error) => {
-            res.status(500).send({ error: error.message });
-        });
+    orderHelper.cancelOrder(orderId).then((canceled) => {
+        res.json({ canceled });
+    }).catch((error) => {
+        console.error("Error cancelling order:", error);
+        res.status(500).json({ error: "Error cancelling order" });
+    });
 };
+
+const returnOrder = (req, res) => {
+    let orderId = req.query.id;
+    let userId = req.session.user._id;
+    let returnReason = req.body.returnReason; 
+    console.log(orderId,'1111');
+    console.log(userId,'222');
+    console.log(returnReason,'444');
+
+    orderHelper.returnOrder(orderId, userId, returnReason).then((returnOrderStatus) => {
+        res.json({ message: "Product returned successfully", status: returnOrderStatus });
+    }).catch((error) => {
+        res.status(500).json({ message: "Failed to return product", error: error.message });
+    });
+}
+
 
 
 
@@ -230,4 +245,5 @@ module.exports={postAddress,
     getProfile,
     verifyPayment,
     changeOrderStatus,
-    cancelOrder}
+    cancelOrder,
+    returnOrder}

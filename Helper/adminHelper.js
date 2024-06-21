@@ -50,7 +50,6 @@ const getAllUsers = async () => {
 
 const postAddproduct = async (data) => {
     try {
-       
         const product = new ProductModel(data);
         await product.save();
     } catch (error) {
@@ -58,6 +57,7 @@ const postAddproduct = async (data) => {
         throw new Error('Error saving the product');
     }
 };
+
 
 //Retrieves product details for editing.
 

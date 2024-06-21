@@ -25,7 +25,9 @@ const productSchema = new Schema({
     inventoryId: { type: String, required: true },
     deletedAt: { type: Date, default: null },
     img: { type: Array, required: true },
+    sizes: { type: [String], required: true },  // Added sizes field
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' } });
+
 
 const categorySchema = new Schema({
     name: { type: String, required: true, unique: true },
@@ -38,7 +40,8 @@ const cartSchema = new Schema({
     cartItems: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
         quantity: { type: Number, default: 1 },
-        price: { type: Number }
+        price: { type: Number },
+        size: { type: String, required: true }  
     }]
 }, { timestamps: true });
 

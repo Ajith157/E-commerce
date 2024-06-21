@@ -8,14 +8,20 @@ const orderHelper=require('../Helper/orderHelper');
 const addToCart = (req, res) => {
   try {
     let userId = req.session.user._id;
+    let size = req.body.size;
 
-    cartHelper.addToCart(req.params.id, userId).then((response) => {
+    if (!size) {
+      return res.status(400).json({ success: false, message: "Size is required" });
+    }
+
+    cartHelper.addToCart(req.params.id, userId, size).then((response) => {
       res.json({ success: true, message: "Item successfully added to cart", data: response });
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 
 //Handles the GET request to retrieve cart data.
@@ -52,6 +58,7 @@ const getCart = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 //Handles the POST request to update item quantity in the cart

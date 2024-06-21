@@ -5,10 +5,11 @@ const {cartModel,ProductModel}=require('../models/Schema')
 
 //Adds a product to the user's cart.
 
-const addToCart= (proId, userId) => {
+const addToCart = (proId, userId, size) => {
   const proObj = {
     productId: proId,
     quantity: 1,
+    size: size, // Add size to the cart item
   };
 
   return new Promise(async (resolve, reject) => {
@@ -16,11 +17,11 @@ const addToCart= (proId, userId) => {
       const cart = await cartModel.findOne({ user: userId });
 
       if (cart) {
-        const productExist = cart.cartItems.findIndex(cartItem => cartItem.productId == proId);
+        const productExist = cart.cartItems.findIndex(cartItem => cartItem.productId == proId && cartItem.size == size);
 
         if (productExist !== -1) {
           const response = await cartModel.updateOne(
-            { user: userId, "cartItems.productId": proId },
+            { user: userId, "cartItems.productId": proId, "cartItems.size": size },
             { $inc: { "cartItems.$.quantity": 1 } }
           );
           resolve({ response, status: false });
@@ -45,6 +46,7 @@ const addToCart= (proId, userId) => {
   });
 };
 
+
 // Retrieves the count of items in the user's cart.
 
 const getCartCount= (userId) => {
@@ -63,7 +65,7 @@ const getCartCount= (userId) => {
 
 //Retrieves the items in the user's cart with details.
 
-const getCartItems= (userId) => {
+const getCartItems = (userId) => {
   return new Promise((resolve, reject) => {
     cartModel.aggregate([
       { $match: { user: new ObjectId(userId) } },
@@ -71,7 +73,8 @@ const getCartItems= (userId) => {
       {
         $project: {
           item: "$cartItems.productId",
-          quantity: "$cartItems.quantity"
+          quantity: "$cartItems.quantity",
+          size: "$cartItems.size" // Include size
         }
       },
       {
@@ -86,9 +89,28 @@ const getCartItems= (userId) => {
         $project: {
           item: 1,
           quantity: 1,
+          size: 1, // Include size
           carted: { $arrayElemAt: ["$carted", 0] }
         }
       },
+      {
+        $project: {
+          _id: 1,
+          item: 1,
+          quantity: 1,
+          size: 1, // Include size
+          "carted._id": 1,
+          "carted.name": 1,
+          "carted.description": 1,
+          "carted.price": 1,
+          "carted.category": 1,
+          "carted.inventoryId": 1,
+          "carted.deletedAt": 1,
+          "carted.img": 1,
+          "carted.createdAt": 1,
+          "carted.modifiedAt": 1
+        }
+      }
     ]).then((cartItems) => {
       resolve(cartItems);
     }).catch(error => {
@@ -96,6 +118,8 @@ const getCartItems= (userId) => {
     });
   });
 };
+
+
 
 //Updates the quantity of a product in the user's cart.
 
